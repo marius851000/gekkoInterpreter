@@ -16,6 +16,8 @@ pub const BASE_RW_ADRESS: u32 = 0x80000000;
 
 #[cfg(test)]
 mod tests {
+    mod test_interpreter;
+
     #[test]
     fn test_break() {
         use crate::BreakData;

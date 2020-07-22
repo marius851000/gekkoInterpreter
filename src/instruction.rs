@@ -3,14 +3,15 @@ use crate::Spr;
 
 #[derive(Debug, PartialEq)]
 pub enum Instruction {
-    Addx(u8, u8, u8, bool, bool), // D, A, B, OE, Rc
-    Stwu(u8, u8, i16),            // S, A, d
-    Mfspr(u8, Spr),               // D, spr
-    Cmpli(u8, bool, u8, u16),     //crfD, L, rA, UIMM
-    Stw(u8, u8, i16),             //rS, rA, d
-    Stmw(u8, u8, i16),            //rS, rA, d
-    Orx(u8, u8, u8, bool),        //rS, rA, rB, Rc
-    Bcx(u8, u8, i16, bool, bool), //BO, BI, BD, AA, LK
+    Addx(u8, u8, u8, bool, bool),      // D, A, B, OE, Rc
+    Stwu(u8, u8, i16),                 // S, A, d
+    Mfspr(u8, Spr),                    // D, spr
+    Cmpli(u8, bool, u8, u16),          //crfD, L, rA, UIMM
+    Stw(u8, u8, i16),                  //rS, rA, d
+    Stmw(u8, u8, i16),                 //rS, rA, d
+    Orx(u8, u8, u8, bool),             //rS, rA, rB, Rc
+    Bcx(u8, u8, i16, bool, bool),      //BO, BI, BD, AA, LK
+    Rlwinmx(u8, u8, u8, u8, u8, bool), //rS, rA, SH, MB, ME, Rc
     CustomBreak,
 }
 
@@ -27,15 +28,21 @@ impl Instruction {
                     get_bit_section(opcode, 16, 16) as u16,
                 )
             }
-            16 => {
-                Instruction::Bcx(
-                    get_bit_section(opcode, 6, 5) as u8,
-                    get_bit_section(opcode, 11, 5) as u8,
-                    extend_sign_16(get_bit_section(opcode, 16, 14) as u16, 14), //TODO: extend the last 2 byte
-                    get_bit_value(opcode, 30),
-                    get_bit_value(opcode, 31),
-                )
-            }
+            16 => Instruction::Bcx(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                extend_sign_16(get_bit_section(opcode, 16, 14) as u16, 14),
+                get_bit_value(opcode, 30),
+                get_bit_value(opcode, 31),
+            ),
+            21 => Instruction::Rlwinmx(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                get_bit_section(opcode, 16, 5) as u8,
+                get_bit_section(opcode, 21, 5) as u8,
+                get_bit_section(opcode, 26, 5) as u8,
+                get_bit_value(opcode, 31),
+            ),
             31 => {
                 let extended_opcode = get_bit_section(opcode, 22, 9);
                 match extended_opcode {

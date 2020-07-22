@@ -24,6 +24,19 @@ pub fn extend_sign_16(mut data: u16, position: usize) -> i16 {
     data as i16
 }
 
+#[inline]
+pub fn make_rotation_mask(mb: u32, me: u32) -> u32 {
+    let begin = 0xFFFFFFFF >> mb;
+    let end = 0x7FFFFFFF >> me;
+    let mask = begin ^ end;
+
+    if (me < mb) {
+        !mask
+    } else {
+        mask
+    }
+}
+
 #[test]
 fn test_get_bit() {
     assert_eq!(
