@@ -74,6 +74,16 @@ impl GekkoInterpreter {
 
                 self.register.increment_pc();
             }
+            Instruction::Stw(r_s, r_a, d) => {
+                let address = ((if r_a == 0 {
+                    0
+                } else {
+                    self.register.gpr[r_a as usize]
+                } as i64)
+                    + (d as i64)) as u32;
+                self.write_u32(address, self.register.gpr[r_s as usize]);
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
@@ -192,4 +202,15 @@ fn test_cmpli() {
     gekko.register.setxer_ov_so(false);
     gekko.step().unwrap();
     assert_eq!(gekko.register.cr[5], 0b1001);
+}
+
+#[test]
+fn test_stw() {
+    let mut gekko = GekkoInterpreter::new(12);
+    //test "stw r1, -4(r2)"
+    gekko.write_u32(BASE_RW_ADRESS, 0b100100_00001_00010_1111_1111_1111_1100);
+    gekko.register.gpr[2] = BASE_RW_ADRESS + 12;
+    gekko.register.gpr[1] = 300;
+    gekko.step().unwrap();
+    assert_eq!(gekko.read_u32(BASE_RW_ADRESS + 8), 300);
 }
