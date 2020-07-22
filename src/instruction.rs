@@ -9,6 +9,7 @@ pub enum Instruction {
     Mfspr(u8, Spr),               // D, spr
     Cmpli(u8, bool, u8, u16),     //crfD, L, rA, UIMM
     Stw(u8, u8, i16),             //rS, rA, d
+    Stmw(u8, u8, i16),            //rS, rA, d
     CustomBreak,
 }
 
@@ -51,6 +52,11 @@ impl Instruction {
                 get_bit_section(opcode, 16, 16) as i16,
             ),
             37 => Instruction::Stwu(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                get_bit_section(opcode, 16, 16) as i16,
+            ),
+            47 => Instruction::Stmw(
                 get_bit_section(opcode, 6, 5) as u8,
                 get_bit_section(opcode, 11, 5) as u8,
                 get_bit_section(opcode, 16, 16) as i16,

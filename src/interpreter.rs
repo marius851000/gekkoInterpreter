@@ -82,7 +82,20 @@ impl GekkoInterpreter {
                 } as i64)
                     + (d as i64)) as u32;
                 self.write_u32(address, self.register.gpr[r_s as usize]);
+
                 self.register.increment_pc();
+            }
+            Instruction::Stmw(mut gpr_s, gpr_a, d) => {
+                let mut address = (if gpr_a == 0 {
+                    0
+                } else {
+                    self.register.gpr[gpr_a as usize] as i64
+                } + d as i64) as u32;
+                while gpr_s < 32 {
+                    self.write_u32(address, self.register.gpr[gpr_s as usize]);
+                    gpr_s += 1;
+                    address += 4;
+                }
             }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
@@ -213,4 +226,19 @@ fn test_stw() {
     gekko.register.gpr[1] = 300;
     gekko.step().unwrap();
     assert_eq!(gekko.read_u32(BASE_RW_ADRESS + 8), 300);
+}
+
+#[test]
+fn test_stmw() {
+    let mut gekko = GekkoInterpreter::new(30);
+    //test "stmw r29, -4(r3)"
+    gekko.write_u32(BASE_RW_ADRESS, 0b101111_11101_00011_1111_1111_1111_1100);
+    gekko.register.gpr[3] = BASE_RW_ADRESS + 12;
+    gekko.register.gpr[29] = 20;
+    gekko.register.gpr[30] = 30;
+    gekko.register.gpr[31] = 50;
+    gekko.step().unwrap();
+    assert_eq!(gekko.read_u32(BASE_RW_ADRESS + 8), 20);
+    assert_eq!(gekko.read_u32(BASE_RW_ADRESS + 12), 30);
+    assert_eq!(gekko.read_u32(BASE_RW_ADRESS + 16), 50);
 }
