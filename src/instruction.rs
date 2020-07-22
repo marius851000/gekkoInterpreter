@@ -1,10 +1,12 @@
 use crate::get_bit_section;
 use crate::get_bit_value;
+use crate::Spr;
 
 #[derive(Debug, PartialEq)]
 pub enum Instruction {
     Addx(u8, u8, u8, bool, bool), // D, A, B, OE, Rc
     Stwu(u8, u8, i16), // S, A, d
+    Mfspr(u8, Spr), // D, spr
     CustomBreak,
 }
 
@@ -22,6 +24,13 @@ impl Instruction {
                         get_bit_value(opcode, 21),
                         get_bit_value(opcode, 31),
                     ),
+                    339 => {
+                        debug_assert_eq!(get_bit_value(opcode, 31), false);
+                        Instruction::Mfspr(
+                            get_bit_section(opcode, 6, 5) as u8,
+                            Spr::decode_from_mfspr(get_bit_section(opcode, 11, 10) as u16),
+                        )
+                    }
                     _ => return None,
                 }
             },

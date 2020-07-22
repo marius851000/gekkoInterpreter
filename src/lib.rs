@@ -2,7 +2,7 @@ mod interpreter;
 pub use interpreter::{BreakData, GekkoInterpreter};
 
 mod register;
-pub use register::GekkoRegister;
+pub use register::{GekkoRegister, Spr};
 
 mod instruction;
 pub use instruction::Instruction;

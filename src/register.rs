@@ -7,6 +7,9 @@ pub struct GekkoRegister {
     // program counter (position of the cursor in the code)
     pub pc: u32,
 
+    // link register
+    pub lr: u32,
+
     pub xer: u32,
 
     // field of a condition register. The data are the first four bit to the left, like 0, 0, 0, 0, LT, GT, EQ, SO
@@ -36,8 +39,29 @@ impl Default for GekkoRegister {
         Self {
             gpr: [0; 32],
             pc: BASE_RW_ADRESS,
+            lr: 0,
             xer: 0,
             cr: [0; 8],
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Spr {
+    XER,
+    LR,
+    CTR,
+}
+
+impl Spr {
+    #[inline]
+    pub fn decode_from_mfspr(data: u16) -> Spr {
+        debug_assert_eq!(data << 15-5, 0);
+        match (data >> 5) {
+            0b00001 => Spr::XER,
+            0b01000 => Spr::LR,
+            0b01001 => Spr::CTR,
+            _ => panic!("unknown SPR for mfspr"),
         }
     }
 }

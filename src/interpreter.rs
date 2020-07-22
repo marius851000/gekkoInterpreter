@@ -1,6 +1,7 @@
 use crate::GekkoRegister;
 use crate::Instruction;
 use crate::BASE_RW_ADRESS;
+use crate::Spr;
 
 #[derive(Debug, PartialEq)]
 pub enum BreakData {
@@ -48,6 +49,14 @@ impl GekkoInterpreter {
                 let address = ((self.register.gpr[gpr_a as usize] as i64) + (d as i64)) as u32;
                 self.write_u32(address, self.register.gpr[gpr_s as usize]);
                 self.register.gpr[gpr_a as usize] = address;
+                self.register.increment_pc();
+            },
+            Instruction::Mfspr(gpr_d, spr) => {
+                self.register.gpr[gpr_d as usize] = match spr {
+                    Spr::LR => self.register.lr,
+                    x => panic!("mfspr: unimplemented for the LR {:?}", x),
+                };
+                self.register.increment_pc();
             },
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
@@ -112,7 +121,6 @@ fn test_reboot() {
 }
 #[test]
 fn test_addx() {
-    use crate::OPCODE_BREAK;
     let mut gekko = GekkoInterpreter::new(4);
     // test "add r0, r1, r2"
     gekko.register.gpr[1] = 100;
@@ -136,7 +144,6 @@ fn test_addx() {
 
 #[test]
 fn test_stwu() {
-    use crate::OPCODE_BREAK;
     let mut gekko = GekkoInterpreter::new(100);
     // test "stwu r1, -8(r2)"
     gekko.write_u32(BASE_RW_ADRESS+0, 0b100101_00001_00010_1111_1111_1111_1000);
@@ -145,4 +152,14 @@ fn test_stwu() {
     gekko.step();
     assert_eq!(gekko.read_u32(BASE_RW_ADRESS+10), 35);
     assert_eq!(gekko.register.gpr[2], BASE_RW_ADRESS+10);
+}
+
+#[test]
+fn test_mfspr() {
+    let mut gekko = GekkoInterpreter::new(4);
+    // test "mfspr r0, LR"
+    gekko.write_u32(BASE_RW_ADRESS, 0x7C0802A6);
+    gekko.register.lr = 123;
+    gekko.step();
+    assert_eq!(gekko.register.gpr[0], 123);
 }
