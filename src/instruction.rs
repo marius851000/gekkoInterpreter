@@ -1,8 +1,10 @@
 use crate::get_bit_section;
 use crate::get_bit_value;
+
 #[derive(Debug, PartialEq)]
 pub enum Instruction {
     Addx(u8, u8, u8, bool, bool), // D, A, B, OE, Rc
+    Stwu(u8, u8, i16), // S, A, d
     CustomBreak,
 }
 
@@ -23,6 +25,11 @@ impl Instruction {
                     _ => return None,
                 }
             },
+            37 => Instruction::Stwu(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                get_bit_section(opcode, 16, 16) as i16
+            ),
             0b111011 => {
                 let extended_opcode = get_bit_section(opcode, 26, 5);
                 match extended_opcode {

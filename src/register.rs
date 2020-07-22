@@ -1,4 +1,5 @@
-#[derive(Default)]
+use crate::BASE_RW_ADRESS;
+
 pub struct GekkoRegister {
     // general purpose register
     pub gpr: [u32; 32],
@@ -27,5 +28,16 @@ impl GekkoRegister {
     #[inline]
     pub fn increment_pc(&mut self) {
         self.pc += 4;
+    }
+}
+
+impl Default for GekkoRegister {
+    fn default() -> Self {
+        Self {
+            gpr: [0; 32],
+            pc: BASE_RW_ADRESS,
+            xer: 0,
+            cr: [0; 8],
+        }
     }
 }
