@@ -14,6 +14,8 @@ pub struct GekkoRegister {
 
     // field of a condition register. The data are the first four bit to the left, like 0, 0, 0, 0, LT, GT, EQ, SO
     pub cr: [u8; 8],
+
+    pub ctr: u32,
 }
 
 impl GekkoRegister {
@@ -37,6 +39,16 @@ impl GekkoRegister {
     pub fn increment_pc(&mut self) {
         self.pc += 4;
     }
+
+    #[inline]
+    pub fn get_bit_cr(&self, cr_bit: usize) -> bool {
+        (self.cr[cr_bit / 4] >> (3 - (cr_bit % 4))) & 1 == 1
+    }
+
+    #[inline]
+    pub fn decrement_ctr(&mut self) {
+        self.ctr = self.ctr.wrapping_sub(1);
+    }
 }
 
 impl Default for GekkoRegister {
@@ -47,6 +59,7 @@ impl Default for GekkoRegister {
             lr: 0,
             xer: 0,
             cr: [0; 8],
+            ctr: 0,
         }
     }
 }

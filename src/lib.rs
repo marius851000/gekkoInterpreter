@@ -7,8 +7,7 @@ pub use register::{GekkoRegister, Spr};
 mod instruction;
 pub use instruction::Instruction;
 
-mod util;
-pub use util::{get_bit_section, get_bit_value};
+pub mod util;
 
 #[allow(clippy::inconsistent_digit_grouping)]
 pub const OPCODE_BREAK: u32 = 0b111011_00_00000000_00000000_00000000;

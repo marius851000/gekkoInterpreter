@@ -5,7 +5,23 @@ pub fn get_bit_section(data: u32, start: usize, len: usize) -> u32 {
 
 #[inline]
 pub fn get_bit_value(data: u32, position: usize) -> bool {
-    (data >> (31-position)) & 1== 1
+    (data >> (31 - position)) & 1 == 1
+}
+
+#[inline]
+pub fn u8_get_bit(data: u8, position: usize) -> bool {
+    (data >> (7 - position)) & 1 == 1
+}
+
+#[inline]
+pub fn extend_sign_16(mut data: u16, position: usize) -> i16 {
+    let is_negative = (data >> (position - 1)) == 1;
+    if is_negative {
+        for nb in position..16 {
+            data |= 1 << nb
+        }
+    };
+    data as i16
 }
 
 #[test]
@@ -16,4 +32,17 @@ fn test_get_bit() {
     );
     assert_eq!(get_bit_value(0xFF7FFFFF, 8), false);
     assert_eq!(get_bit_value(0x00010000, 15), true);
+}
+
+#[test]
+fn test_extend_sign() {
+    assert_eq!(
+        extend_sign_16(0x4000, 15),
+        i16::from_be_bytes((0xC000u16).to_be_bytes())
+    );
+    assert_eq!(
+        extend_sign_16(0x0F0F, 12),
+        i16::from_be_bytes((0xFF0Fu16).to_be_bytes())
+    );
+    assert_eq!(extend_sign_16(0x1F0F, 15), 0x1F0F);
 }

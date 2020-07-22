@@ -1,5 +1,4 @@
-use crate::get_bit_section;
-use crate::get_bit_value;
+use crate::util::{extend_sign_16, get_bit_section, get_bit_value};
 use crate::Spr;
 
 #[derive(Debug, PartialEq)]
@@ -11,6 +10,7 @@ pub enum Instruction {
     Stw(u8, u8, i16),             //rS, rA, d
     Stmw(u8, u8, i16),            //rS, rA, d
     Orx(u8, u8, u8, bool),        //rS, rA, rB, Rc
+    Bcx(u8, u8, i16, bool, bool), //BO, BI, BD, AA, LK
     CustomBreak,
 }
 
@@ -25,6 +25,15 @@ impl Instruction {
                     get_bit_value(opcode, 10),
                     get_bit_section(opcode, 11, 5) as u8,
                     get_bit_section(opcode, 16, 16) as u16,
+                )
+            }
+            16 => {
+                Instruction::Bcx(
+                    get_bit_section(opcode, 6, 5) as u8,
+                    get_bit_section(opcode, 11, 5) as u8,
+                    extend_sign_16(get_bit_section(opcode, 16, 14) as u16, 14), //TODO: extend the last 2 byte
+                    get_bit_value(opcode, 30),
+                    get_bit_value(opcode, 31),
                 )
             }
             31 => {

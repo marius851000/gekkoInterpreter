@@ -1,3 +1,4 @@
+use crate::util::u8_get_bit;
 use crate::GekkoRegister;
 use crate::Instruction;
 use crate::Spr;
@@ -106,6 +107,29 @@ impl GekkoInterpreter {
                     panic!("orx: rc not implemented");
                 };
                 self.register.increment_pc();
+            }
+            Instruction::Bcx(bo, bi, bd, aa, lk) => {
+                let dont_use_ctr = u8_get_bit(bo, 7 - 2);
+                if !dont_use_ctr {
+                    self.register.decrement_ctr();
+                };
+                let ctr_diff_0 = u8_get_bit(bo, 7 - 1);
+                let ctr_ok = dont_use_ctr | ((self.register.ctr != 0) ^ ctr_diff_0);
+                let dont_use_cond = u8_get_bit(bo, 7 - 4);
+                let cond_ok = dont_use_cond
+                    | (self.register.get_bit_cr(bi as usize) == u8_get_bit(bo, 7 - 3));
+                if ctr_ok & cond_ok {
+                    if lk {
+                        self.register.lr = self.register.pc + 4;
+                    }
+                    if aa {
+                        self.register.pc = (bd as i32) as u32;
+                    } else {
+                        self.register.pc = ((self.register.pc as i64) + (bd as i64)) as u32
+                    }
+                } else {
+                    self.register.increment_pc();
+                }
             }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
@@ -219,12 +243,12 @@ fn test_mfspr() {
 fn test_cmpli() {
     let mut gekko = GekkoInterpreter::new(4);
     //test "cmpli crf5, 0, r4, 5"
-    gekko.write_u32(BASE_RW_ADRESS, 0b001010_101_0_0_00101_00000000_00000101);
+    gekko.write_u32(BASE_RW_ADRESS, 0b001010_101_0_0_00100_00000000_00000101);
     gekko.register.gpr[4] = 35;
     gekko.register.setxer_ov_so(true);
     gekko.register.setxer_ov_so(false);
     gekko.step().unwrap();
-    assert_eq!(gekko.register.cr[5], 0b1001);
+    assert_eq!(gekko.register.cr[5], 0b0101);
 }
 
 #[test]
@@ -263,4 +287,66 @@ fn test_orx() {
     gekko.step().unwrap();
     assert_eq!(gekko.register.gpr[1], 0x000000FF);
     //TODO: or. (Rc = 1)
+}
+
+#[test]
+fn test_bcx() {
+    use crate::OPCODE_BREAK;
+    let mut gekko = GekkoInterpreter::new(100);
+    //test "bc 0b00100 0b00000 8"
+    gekko.write_u32(BASE_RW_ADRESS, 0b010000_00100_00000_00000000_001000_0_0);
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.pc, BASE_RW_ADRESS + 8);
+    gekko.register.pc = BASE_RW_ADRESS;
+    gekko.register.cr[0] = 0b00001000;
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.pc, BASE_RW_ADRESS + 4);
+    assert_eq!(gekko.register.lr, 0);
+    //test "bcla 0b00010 0b00100 12"
+    gekko.reboot();
+    gekko.write_u32(BASE_RW_ADRESS, 0b010000_00010_00100_00000000_001100_1_1);
+    gekko.register.ctr = 2;
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.pc, BASE_RW_ADRESS + 4);
+    assert_eq!(gekko.register.ctr, 1);
+    assert_eq!(gekko.register.lr, 0);
+    gekko.register.pc = BASE_RW_ADRESS;
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.pc, 12);
+    assert_eq!(gekko.register.ctr, 0);
+    assert_eq!(gekko.register.lr, BASE_RW_ADRESS + 4);
+    //test "bca 0b10000 0 12"
+    gekko.reboot();
+    gekko.write_u32(BASE_RW_ADRESS, 0b010000_10000_00000_00000000_001100_1_0);
+    gekko.register.ctr = 5;
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.ctr, 4);
+    assert_eq!(gekko.register.pc, 12);
+    assert_eq!(gekko.register.lr, 0);
+
+    gekko.reboot();
+    //test:
+    //with r3 = 10
+    //with r2 = 0
+    //cmpli 5, 0, r3, 10
+    gekko.write_u32(BASE_RW_ADRESS, 0b001010_101_0_0_00011_00000000_00001010);
+    //bc 0b01100 (5*4+2) 8 ;5*4+2=22
+    gekko.write_u32(BASE_RW_ADRESS + 4, 0b010000_01100_10110_00000000_001000_0_0);
+    //break
+    gekko.write_u32(BASE_RW_ADRESS + 8, OPCODE_BREAK);
+    //or r2, r3, r3
+    gekko.write_u32(BASE_RW_ADRESS + 12, 0b011111_00011_00010_00011_0110111100_0);
+    //break
+    gekko.write_u32(BASE_RW_ADRESS + 16, OPCODE_BREAK);
+    gekko.register.gpr[3] = 10;
+    gekko.register.gpr[2] = 0;
+    gekko.run_until_event();
+    assert_eq!(gekko.register.gpr[2], 10);
+    gekko.register.pc = BASE_RW_ADRESS;
+    gekko.register.gpr[3] = 100;
+    gekko.register.gpr[2] = 3;
+    gekko.run_until_event();
+    assert_eq!(gekko.register.gpr[2], 3);
+
+    //TODO: include a true program (cmpli, bcx @1, break (bad), @1: set, break (ok))
 }
