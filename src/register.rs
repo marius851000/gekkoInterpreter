@@ -24,6 +24,11 @@ impl GekkoRegister {
     }
 
     #[inline]
+    pub fn get_xer_so(&mut self) -> bool {
+        (self.xer >> 31) != 0
+    }
+
+    #[inline]
     pub fn update_cr0(&mut self, _value: u32) {
         todo!("update_cr0 is not yet implemented")
     }
@@ -56,7 +61,7 @@ pub enum Spr {
 impl Spr {
     #[inline]
     pub fn decode_from_mfspr(data: u16) -> Spr {
-        debug_assert_eq!(data << (15-5), 0);
+        debug_assert_eq!(data << (15 - 5), 0);
         match data >> 5 {
             0b00001 => Spr::XER,
             0b01000 => Spr::LR,

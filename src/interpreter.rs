@@ -1,7 +1,7 @@
 use crate::GekkoRegister;
 use crate::Instruction;
-use crate::BASE_RW_ADRESS;
 use crate::Spr;
+use crate::BASE_RW_ADRESS;
 
 #[derive(Debug, PartialEq)]
 pub enum BreakData {
@@ -44,20 +44,36 @@ impl GekkoInterpreter {
                     self.register.update_cr0(result);
                 };
                 self.register.increment_pc();
-            },
+            }
             Instruction::Stwu(gpr_s, gpr_a, d) => {
                 let address = ((self.register.gpr[gpr_a as usize] as i64) + (d as i64)) as u32;
                 self.write_u32(address, self.register.gpr[gpr_s as usize]);
                 self.register.gpr[gpr_a as usize] = address;
                 self.register.increment_pc();
-            },
+            }
             Instruction::Mfspr(gpr_d, spr) => {
                 self.register.gpr[gpr_d as usize] = match spr {
                     Spr::LR => self.register.lr,
                     x => panic!("mfspr: unimplemented for the LR {:?}", x),
                 };
                 self.register.increment_pc();
-            },
+            }
+            Instruction::Cmpli(crf_d, l, gpr_a, uimm) => {
+                assert_eq!(l, false);
+                let a = self.register.gpr[gpr_a as usize];
+                let b = uimm as u32;
+                let f = if a < b {
+                    0x8
+                } else if a > b {
+                    0x4
+                } else {
+                    0x2
+                } | (self.register.get_xer_so() as u8);
+
+                self.register.cr[crf_d as usize] = f;
+
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
@@ -101,21 +117,24 @@ impl GekkoInterpreter {
 #[test]
 fn test_read_write_ram() {
     let mut gekko = GekkoInterpreter::new(10);
-    assert_eq!(gekko.read_u32(BASE_RW_ADRESS+0), 0);
-    gekko.write_u32(BASE_RW_ADRESS+4, 0x0000FFFF);
-    assert_eq!(gekko.read_u32(BASE_RW_ADRESS+4), 0x0000FFFF);
-    assert_eq!(gekko.read_u32(BASE_RW_ADRESS+6), 0xFFFF0000);
+    assert_eq!(gekko.read_u32(BASE_RW_ADRESS + 0), 0);
+    gekko.write_u32(BASE_RW_ADRESS + 4, 0x0000FFFF);
+    assert_eq!(gekko.read_u32(BASE_RW_ADRESS + 4), 0x0000FFFF);
+    assert_eq!(gekko.read_u32(BASE_RW_ADRESS + 6), 0xFFFF0000);
 }
 
 #[test]
 fn test_reboot() {
     let mut gekko = GekkoInterpreter::new(4);
-    gekko.write_u32(BASE_RW_ADRESS+0, 1);
+    gekko.write_u32(BASE_RW_ADRESS + 0, 1);
     gekko.register.gpr[10] = 10;
     gekko.register.pc = 4;
     gekko.reboot();
     let mut gekko_base = GekkoInterpreter::new(4);
-    assert_eq!(gekko.read_u32(BASE_RW_ADRESS+0), gekko_base.read_u32(BASE_RW_ADRESS));
+    assert_eq!(
+        gekko.read_u32(BASE_RW_ADRESS + 0),
+        gekko_base.read_u32(BASE_RW_ADRESS)
+    );
     assert_eq!(gekko.register.gpr[10], gekko_base.register.gpr[10]);
     assert_eq!(gekko.register.pc, gekko_base.register.pc);
 }
@@ -125,33 +144,32 @@ fn test_addx() {
     // test "add r0, r1, r2"
     gekko.register.gpr[1] = 100;
     gekko.register.gpr[2] = 2510;
-    gekko.write_u32(BASE_RW_ADRESS+0, 0b011111_00000_00001_00010_0_100001010_0);
+    gekko.write_u32(BASE_RW_ADRESS + 0, 0b011111_00000_00001_00010_0_100001010_0);
     gekko.step().unwrap();
     assert_eq!(gekko.register.gpr[0], 100 + 2510);
     gekko.reboot();
 
     // test "addo r0, r1, r2"
-    gekko.register.gpr[1] = u32::MAX-10;
+    gekko.register.gpr[1] = u32::MAX - 10;
     gekko.register.gpr[2] = 100;
-    gekko.write_u32(BASE_RW_ADRESS+0, 0b011111_00000_00001_00010_1_100001010_0);
+    gekko.write_u32(BASE_RW_ADRESS + 0, 0b011111_00000_00001_00010_1_100001010_0);
     gekko.step().unwrap();
-    assert_eq!(gekko.register.gpr[0], (u32::MAX-10).wrapping_add(100));
+    assert_eq!(gekko.register.gpr[0], (u32::MAX - 10).wrapping_add(100));
     gekko.reboot();
 
     //TODO: test cr0
-
 }
 
 #[test]
 fn test_stwu() {
-    let mut gekko = GekkoInterpreter::new(100);
+    let mut gekko = GekkoInterpreter::new(30);
     // test "stwu r1, -8(r2)"
-    gekko.write_u32(BASE_RW_ADRESS+0, 0b100101_00001_00010_1111_1111_1111_1000);
+    gekko.write_u32(BASE_RW_ADRESS + 0, 0b100101_00001_00010_1111_1111_1111_1000);
     gekko.register.gpr[1] = 35;
-    gekko.register.gpr[2] = BASE_RW_ADRESS+10+8;
+    gekko.register.gpr[2] = BASE_RW_ADRESS + 10 + 8;
     gekko.step().unwrap();
-    assert_eq!(gekko.read_u32(BASE_RW_ADRESS+10), 35);
-    assert_eq!(gekko.register.gpr[2], BASE_RW_ADRESS+10);
+    assert_eq!(gekko.read_u32(BASE_RW_ADRESS + 10), 35);
+    assert_eq!(gekko.register.gpr[2], BASE_RW_ADRESS + 10);
 }
 
 #[test]
@@ -162,4 +180,16 @@ fn test_mfspr() {
     gekko.register.lr = 123;
     gekko.step().unwrap();
     assert_eq!(gekko.register.gpr[0], 123);
+}
+
+#[test]
+fn test_cmpli() {
+    let mut gekko = GekkoInterpreter::new(4);
+    //test "cmpli crf5, 0, r4, 5"
+    gekko.write_u32(BASE_RW_ADRESS, 0b001010_101_0_0_00101_00000000_00000101);
+    gekko.register.gpr[4] = 35;
+    gekko.register.setxer_ov_so(true);
+    gekko.register.setxer_ov_so(false);
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.cr[5], 0b1001);
 }
