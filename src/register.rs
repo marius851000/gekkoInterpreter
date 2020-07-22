@@ -20,11 +20,11 @@ impl GekkoRegister {
     #[inline]
     pub fn setxer_ov_so(&mut self, value: bool) {
         self.xer = (self.xer & 0xBFFFFFFF) | ((value as u32) << 30);
-        self.xer = self.xer | ((value as u32) << 31);
+        self.xer |= (value as u32) << 31;
     }
 
     #[inline]
-    pub fn update_cr0(&mut self, value: u32) {
+    pub fn update_cr0(&mut self, _value: u32) {
         todo!("update_cr0 is not yet implemented")
     }
 
@@ -56,8 +56,8 @@ pub enum Spr {
 impl Spr {
     #[inline]
     pub fn decode_from_mfspr(data: u16) -> Spr {
-        debug_assert_eq!(data << 15-5, 0);
-        match (data >> 5) {
+        debug_assert_eq!(data << (15-5), 0);
+        match data >> 5 {
             0b00001 => Spr::XER,
             0b01000 => Spr::LR,
             0b01001 => Spr::CTR,

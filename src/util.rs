@@ -5,11 +5,7 @@ pub fn get_bit_section(data: u32, start: usize, len: usize) -> u32 {
 
 #[inline]
 pub fn get_bit_value(data: u32, position: usize) -> bool {
-    if get_bit_section(data, position, 1) == 0 {
-        return false;
-    } else {
-        return true;
-    }
+    get_bit_section(data, position, 1) != 0
 }
 
 #[test]

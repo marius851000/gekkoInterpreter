@@ -149,7 +149,7 @@ fn test_stwu() {
     gekko.write_u32(BASE_RW_ADRESS+0, 0b100101_00001_00010_1111_1111_1111_1000);
     gekko.register.gpr[1] = 35;
     gekko.register.gpr[2] = BASE_RW_ADRESS+10+8;
-    gekko.step();
+    gekko.step().unwrap();
     assert_eq!(gekko.read_u32(BASE_RW_ADRESS+10), 35);
     assert_eq!(gekko.register.gpr[2], BASE_RW_ADRESS+10);
 }
@@ -160,6 +160,6 @@ fn test_mfspr() {
     // test "mfspr r0, LR"
     gekko.write_u32(BASE_RW_ADRESS, 0x7C0802A6);
     gekko.register.lr = 123;
-    gekko.step();
+    gekko.step().unwrap();
     assert_eq!(gekko.register.gpr[0], 123);
 }

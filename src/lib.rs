@@ -10,6 +10,7 @@ pub use instruction::Instruction;
 mod util;
 pub use util::{get_bit_section, get_bit_value};
 
+#[allow(clippy::inconsistent_digit_grouping)]
 pub const OPCODE_BREAK: u32 = 0b111011_00_00000000_00000000_00000000;
 
 pub const BASE_RW_ADRESS: u32 = 0x80000000;
