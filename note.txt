@@ -1,0 +1,75 @@
+Plan for ExtraHLE emulator for ANB (US/EU)
+
+prior art: openswe1r (should take a closer look at it)
+
+There are two important part (will ocuppy two different library):
+The CPU emulator
+The HLE functions
+
+The CPU emulator (probably an Interpreter for simplicity and low performance impact in long term):
+	Its main class is a struct (named here PPCEmulator) that contain:
+		The state of the CPU (register, MMU if necessary (but will most likely perform a -0x80000000 instruction to get the good ram address)
+		The RAM
+		The offset of patched function, and the callback to call at each function.
+	It will contain a special, custom instruction that will call the patched instruction at the current PC
+	It will have a function that allow to add a function patch
+	It will allow external access to the CPU data.
+	Question: Will the RAM be static or will PPCEmulator not use global at all ?
+
+The HLE functions:
+	Contain every function that will be replaced in the ANB game.
+	May contain global variable to store data when the game does so.
+	Each HLE function are in fact two function:
+		The function that is called when called by the emulated CPU:
+			Input: emulated CPU state (including RAM, may be static)
+			Operation:
+				Transform the ANB struct to Rust struct (come at a huge performance cost).
+				Call the standard rust function
+				Rewrite changed Rust struct to ANB struct in emulated RAM (come at a huge perfomance cost)
+			This function can be removed once every caller function have been rewritten (will replace the call with a bad instruction opcode in the game)
+		The standard rust function:
+			Input: The various instruction, typically the same as the CPP function as defined in the elf file, but in Rust idiomatic way (cf: no raw pointer)
+			Operation:
+				do approximativelly the same thing as in the original instruction it replace, but in the Rust way
+	Converting struct:
+		Rust struct have at least three function:
+			::default() // may be created with the #[derive(Default)]
+			::load_from_ram(&ram: EmulatedPPCRam, offset: u32) // replace the field with those correspondand in the emulated RAM
+			::save_to_ram(&mut ram: EmulatedPPCRam, offset: u32) // replace the data in the emulated RAM with those of this struct)
+
+	Function to prioritaze emulation:
+		Every function that use a syscall (so dont need to emulate those syscall)
+		The Read from the disk function (will use the standard file hiarchy)
+		Audio/Video output
+		Controller input (just map keyboard to key in the first place)
+		Function we need to understand for moding the game (file data)
+
+	Store rust data in the emulated RAM:
+		This can probably lead to problem. I imagined two possible solution:
+			Remember the offset of the stored data in a global HashMap, indicate rust specific data at that offset
+			Use a unused field to store an ID that will be matched with a global HashMap (usefull if realloc is used)
+
+About graphic:
+	Will most likely use the library gfx-rs (but will have to learn it)
+
+note:
+	this look similar to the way dolphin can patch some function !
+
+Planning:
+	Find/Create a gekko emulator (reuse the Dolphin's one ? may be a good experience at using the FFI)
+	Load the ANB elf file into RAM, with debug symbol (for patching)
+	Create some HLE function to demonstrate the feasibility of this (use MKHeap::Init ?). This is considered the first working WIP.
+	Run the game since the start and see what block the execution. Either reimplement them or create dummy function (thinking about THP playback, althought I could use cheat to skip them)
+	Try to succesfully display some stuff in the menu. Second important work on WIP.
+	Ability to interect with the menu.
+	Ability to create a game and display a level. This is the third and the most important WIP.
+	Finally, replace every function with HLE ones, up to the point we dont need to emulate any of Gekko instruction. At this point, the recreation is considered to be finished.
+	Do whatever I/Others want with this (for example, a control menu to select keyboard mapping)
+
+Licensing:
+	Standard MIT license
+
+custom instruction:
+	They use the primary opcode 0b111011 and a secondary opcode starting with 0
+	BREAK:
+		return the signal Break to the runner (secondary opcode: 0b00000)

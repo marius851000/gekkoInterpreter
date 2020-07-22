@@ -1,0 +1,31 @@
+#[derive(Default)]
+pub struct GekkoRegister {
+    // general purpose register
+    pub gpr: [u32; 32],
+
+    // program counter (position of the cursor in the code)
+    pub pc: u32,
+
+    pub xer: u32,
+
+    // field of a condition register. The data are the first four bit to the left, like 0, 0, 0, 0, LT, GT, EQ, SO
+    pub cr: [u8; 8],
+}
+
+impl GekkoRegister {
+    #[inline]
+    pub fn setxer_ov_so(&mut self, value: bool) {
+        self.xer = (self.xer & 0xBFFFFFFF) | ((value as u32) << 30);
+        self.xer = self.xer | ((value as u32) << 31);
+    }
+
+    #[inline]
+    pub fn update_cr0(&mut self, value: u32) {
+        todo!("update_cr0 is not yet implemented")
+    }
+
+    #[inline]
+    pub fn increment_pc(&mut self) {
+        self.pc += 4;
+    }
+}
