@@ -10,6 +10,7 @@ pub enum Instruction {
     Cmpli(u8, bool, u8, u16),     //crfD, L, rA, UIMM
     Stw(u8, u8, i16),             //rS, rA, d
     Stmw(u8, u8, i16),            //rS, rA, d
+    Orx(u8, u8, u8, bool),        //rS, rA, rB, Rc
     CustomBreak,
 }
 
@@ -41,6 +42,15 @@ impl Instruction {
                         Instruction::Mfspr(
                             get_bit_section(opcode, 6, 5) as u8,
                             Spr::decode_from_mfspr(get_bit_section(opcode, 11, 10) as u16),
+                        )
+                    }
+                    444 => {
+                        debug_assert_eq!(get_bit_value(opcode, 21), false);
+                        Instruction::Orx(
+                            get_bit_section(opcode, 6, 5) as u8,
+                            get_bit_section(opcode, 11, 5) as u8,
+                            get_bit_section(opcode, 16, 5) as u8,
+                            get_bit_value(opcode, 31),
                         )
                     }
                     _ => return None,

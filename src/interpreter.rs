@@ -32,6 +32,7 @@ impl GekkoInterpreter {
         let instruction = Instruction::decode_instruction(self.read_u32(self.register.pc)).unwrap();
         // second, run it
         let mut break_data = BreakData::None;
+        //println!("{:?}", &instruction);
         match instruction {
             Instruction::Addx(gpr_dest, gpr_1, gpr_2, oe, rc) => {
                 let (result, overflow) = self.register.gpr[gpr_1 as usize]
@@ -96,6 +97,15 @@ impl GekkoInterpreter {
                     gpr_s += 1;
                     address += 4;
                 }
+                self.register.increment_pc();
+            }
+            Instruction::Orx(gpr_s, gpr_a, gpr_b, rc) => {
+                self.register.gpr[gpr_a as usize] =
+                    self.register.gpr[gpr_s as usize] | self.register.gpr[gpr_b as usize];
+                if rc {
+                    panic!("orx: rc not implemented");
+                };
+                self.register.increment_pc();
             }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
@@ -241,4 +251,16 @@ fn test_stmw() {
     assert_eq!(gekko.read_u32(BASE_RW_ADRESS + 8), 20);
     assert_eq!(gekko.read_u32(BASE_RW_ADRESS + 12), 30);
     assert_eq!(gekko.read_u32(BASE_RW_ADRESS + 16), 50);
+}
+
+#[test]
+fn test_orx() {
+    let mut gekko = GekkoInterpreter::new(4);
+    //test "or r1, r2, r3"
+    gekko.write_u32(BASE_RW_ADRESS, 0b011111_00010_00001_00011_0110111100_0);
+    gekko.register.gpr[3] = 0x000000FC;
+    gekko.register.gpr[2] = 0x0000000F;
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.gpr[1], 0x000000FF);
+    //TODO: or. (Rc = 1)
 }
