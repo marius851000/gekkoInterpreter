@@ -5,7 +5,7 @@ pub fn get_bit_section(data: u32, start: usize, len: usize) -> u32 {
 
 #[inline]
 pub fn get_bit_value(data: u32, position: usize) -> bool {
-    get_bit_section(data, position, 1) != 0
+    (data >> (31-position)) & 1== 1
 }
 
 #[test]
