@@ -152,6 +152,14 @@ impl GekkoInterpreter {
                 self.write_u8(address, self.register.gpr[gpr_s as usize] as u8);
                 self.register.increment_pc();
             }
+            Instruction::Addis(gpr_d, gpr_a, simm) => {
+                self.register.gpr[gpr_d as usize] = ((if gpr_a == 0 {
+                    0
+                } else {
+                    self.register.gpr[gpr_a as usize] as i32
+                }) + simm as i32) as u32;
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
@@ -184,7 +192,7 @@ impl GekkoInterpreter {
 
     #[inline]
     pub fn write_u8(&mut self, offset: u32, data: u8) {
-        self.ram[(offset-BASE_RW_ADRESS) as usize] = data;
+        self.ram[(offset - BASE_RW_ADRESS) as usize] = data;
     }
 
     #[inline]
@@ -200,6 +208,6 @@ impl GekkoInterpreter {
 
     #[inline]
     pub fn read_u8(&mut self, offset: u32) -> u8 {
-        self.ram[(offset-BASE_RW_ADRESS) as usize]
+        self.ram[(offset - BASE_RW_ADRESS) as usize]
     }
 }
