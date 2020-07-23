@@ -48,7 +48,7 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Stwu(gpr_s, gpr_a, d) => {
-                let address = ((self.register.gpr[gpr_a as usize] as i64) + (d as i64)) as u32;
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
                 self.write_u32(address, self.register.gpr[gpr_s as usize]);
                 self.register.gpr[gpr_a as usize] = address;
                 self.register.increment_pc();
@@ -76,23 +76,14 @@ impl GekkoInterpreter {
 
                 self.register.increment_pc();
             }
-            Instruction::Stw(r_s, r_a, d) => {
-                let address = ((if r_a == 0 {
-                    0
-                } else {
-                    self.register.gpr[r_a as usize]
-                } as i64)
-                    + (d as i64)) as u32;
-                self.write_u32(address, self.register.gpr[r_s as usize]);
+            Instruction::Stw(gpr_s, gpr_a, d) => {
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
+                self.write_u32(address, self.register.gpr[gpr_s as usize]);
 
                 self.register.increment_pc();
             }
             Instruction::Stmw(mut gpr_s, gpr_a, d) => {
-                let mut address = (if gpr_a == 0 {
-                    0
-                } else {
-                    self.register.gpr[gpr_a as usize] as i64
-                } + d as i64) as u32;
+                let mut address = self.register.compute_address_based_on_register(gpr_a, d);
                 while gpr_s < 32 {
                     self.write_u32(address, self.register.gpr[gpr_s as usize]);
                     gpr_s += 1;
@@ -141,10 +132,14 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Lwz(gpr_d, gpr_a, d) => {
-                let address = ((if gpr_a == 0 { 0 } else { self.register.gpr[gpr_a as usize] as i64}) + (d as i64)) as u32;
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
                 self.register.gpr[gpr_d as usize] = self.read_u32(address);
                 self.register.increment_pc();
-
+            }
+            Instruction::Stb(gpr_s, gpr_a, d) => {
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
+                self.write_u8(address, self.register.gpr[gpr_s as usize] as u8);
+                self.register.increment_pc();
             }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
@@ -167,6 +162,7 @@ impl GekkoInterpreter {
         &self.ram
     }
 
+    #[inline]
     pub fn write_u32(&mut self, mut offset: u32, data: u32) {
         offset -= BASE_RW_ADRESS;
         for d in &data.to_be_bytes() {
@@ -175,6 +171,12 @@ impl GekkoInterpreter {
         }
     }
 
+    #[inline]
+    pub fn write_u8(&mut self, offset: u32, data: u8) {
+        self.ram[(offset-BASE_RW_ADRESS) as usize] = data;
+    }
+
+    #[inline]
     pub fn read_u32(&mut self, mut offset: u32) -> u32 {
         offset -= BASE_RW_ADRESS;
         let mut buffer = [0; 4];
@@ -183,5 +185,10 @@ impl GekkoInterpreter {
             offset += 1;
         }
         u32::from_be_bytes(buffer)
+    }
+
+    #[inline]
+    pub fn read_u8(&mut self, offset: u32) -> u8 {
+        self.ram[(offset-BASE_RW_ADRESS) as usize]
     }
 }

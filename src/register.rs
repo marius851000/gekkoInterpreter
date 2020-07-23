@@ -49,6 +49,11 @@ impl GekkoRegister {
     pub fn decrement_ctr(&mut self) {
         self.ctr = self.ctr.wrapping_sub(1);
     }
+
+    #[inline]
+    pub fn compute_address_based_on_register(&self, gpr_a: u8, d:i16) -> u32{
+        ((if gpr_a == 0 { 0 } else { self.gpr[gpr_a as usize] as i64}) + (d as i64)) as u32
+    }
 }
 
 impl Default for GekkoRegister {

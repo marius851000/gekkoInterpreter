@@ -208,3 +208,14 @@ fn test_lwz() {
     gekko.step().unwrap();
     assert_eq!(gekko.register.gpr[31], 0xDEAD_BEEF);
 }
+
+#[test]
+fn test_stb() {
+    let mut gekko = GekkoInterpreter::new(12);
+    //test "stb r3, 0(r5)"
+    gekko.write_u32(BASE_RW_ADRESS, 0b100110_00011_00101_00000000_00000000);
+    gekko.register.gpr[5] = BASE_RW_ADRESS + 6;
+    gekko.register.gpr[3] = 0x12345678;
+    gekko.step().unwrap();
+    assert_eq!(gekko.read_u8(BASE_RW_ADRESS + 6), 0x78);
+}
