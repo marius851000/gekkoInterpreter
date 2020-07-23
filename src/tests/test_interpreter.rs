@@ -122,7 +122,6 @@ fn test_orx() {
 
 #[test]
 fn test_bcx() {
-    use crate::OPCODE_BREAK;
     let mut gekko = GekkoInterpreter::new(100);
     //test "bc 0b00100 0b00000 8"
     gekko.write_u32(BASE_RW_ADRESS, 0b010000_00100_00000_00000000_001000_0_0);
@@ -190,4 +189,22 @@ fn test_rlwinmx() {
     gekko.step().unwrap();
     assert_eq!(gekko.register.gpr[4], 0x0037b800)
     //TODO: test with Rc
+}
+
+#[test]
+fn test_lwz() {
+    let mut gekko = GekkoInterpreter::new(12);
+    //test "lwz r3, 4(r5)"
+    gekko.write_u32(BASE_RW_ADRESS, 0b100000_00011_00101_00000000_00000100);
+    gekko.register.gpr[5] = BASE_RW_ADRESS + 4;
+    gekko.write_u32(BASE_RW_ADRESS + 8, 5434);
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.gpr[3], 5434);
+    gekko.reboot();
+    //test lwz r31, -4(r16)
+    gekko.write_u32(BASE_RW_ADRESS, 0b100000_11111_10000_11111111_11111100);
+    gekko.register.gpr[16] = BASE_RW_ADRESS + 8;
+    gekko.write_u32(BASE_RW_ADRESS + 4, 0xDEAD_BEEF);
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.gpr[31], 0xDEAD_BEEF);
 }

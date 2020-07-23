@@ -138,6 +138,13 @@ impl GekkoInterpreter {
                 if rc {
                     panic!("rlwinmx: rc not implemented");
                 };
+                self.register.increment_pc();
+            }
+            Instruction::Lwz(gpr_d, gpr_a, d) => {
+                let address = ((if gpr_a == 0 { 0 } else { self.register.gpr[gpr_a as usize] as i64}) + (d as i64)) as u32;
+                self.register.gpr[gpr_d as usize] = self.read_u32(address);
+                self.register.increment_pc();
+
             }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;

@@ -30,7 +30,7 @@ pub fn make_rotation_mask(mb: u32, me: u32) -> u32 {
     let end = 0x7FFFFFFF >> me;
     let mask = begin ^ end;
 
-    if (me < mb) {
+    if me < mb {
         !mask
     } else {
         mask
