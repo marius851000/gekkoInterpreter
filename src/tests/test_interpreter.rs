@@ -234,3 +234,18 @@ fn test_addis() {
     gekko.step().unwrap();
     assert_eq!(gekko.register.gpr[20], (-8i32) as u32)
 }
+
+#[test]
+fn test_addi() {
+    let mut gekko = GekkoInterpreter::new(4);
+    //test "addi r4, r3, 10"
+    gekko.write_u32(BASE_RW_ADRESS, 0b001110_00100_00011_00000000_00001010);
+    gekko.register.gpr[3] = 25;
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.gpr[4], 35);
+    gekko.reboot();
+    //test "addi r20, 0, 0xFFF0"
+    gekko.write_u32(BASE_RW_ADRESS, 0b001110_10100_00000_11111111_11110000);
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.gpr[20], 0xFFF0);
+}

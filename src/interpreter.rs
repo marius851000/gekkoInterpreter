@@ -153,11 +153,15 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Addis(gpr_d, gpr_a, simm) => {
-                self.register.gpr[gpr_d as usize] = ((if gpr_a == 0 {
+                self.register.gpr[gpr_d as usize] = (if gpr_a == 0 {
                     0
                 } else {
                     self.register.gpr[gpr_a as usize] as i32
-                }) + simm as i32) as u32;
+                }).wrapping_add(simm as i32) as u32;
+                self.register.increment_pc();
+            }
+            Instruction::Addi(gpr_d, gpr_a, simm) => {
+                self.register.gpr[gpr_d as usize] = (if gpr_a == 0 { 0 } else {self.register.gpr[gpr_a as usize]}).wrapping_add(simm as u32);
                 self.register.increment_pc();
             }
             Instruction::CustomBreak => {
