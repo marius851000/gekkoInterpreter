@@ -124,7 +124,7 @@ fn test_orx() {
 fn test_bcx() {
     let mut gekko = GekkoInterpreter::new(100);
     //test "bc 0b00100 0b00000 8"
-    gekko.write_u32(BASE_RW_ADRESS, 0b010000_00100_00000_00000000_001000_0_0);
+    gekko.write_u32(BASE_RW_ADRESS, 0b010000_00100_00000_00000000_000010_0_0);
     gekko.step().unwrap();
     assert_eq!(gekko.register.pc, BASE_RW_ADRESS + 8);
     gekko.register.pc = BASE_RW_ADRESS;
@@ -134,7 +134,7 @@ fn test_bcx() {
     assert_eq!(gekko.register.lr, 0);
     //test "bcla 0b00010 0b00100 12"
     gekko.reboot();
-    gekko.write_u32(BASE_RW_ADRESS, 0b010000_00010_00100_00000000_001100_1_1);
+    gekko.write_u32(BASE_RW_ADRESS, 0b010000_00010_00100_00000000_000011_1_1);
     gekko.register.ctr = 2;
     gekko.step().unwrap();
     assert_eq!(gekko.register.pc, BASE_RW_ADRESS + 4);
@@ -147,7 +147,7 @@ fn test_bcx() {
     assert_eq!(gekko.register.lr, BASE_RW_ADRESS + 4);
     //test "bca 0b10000 0 12"
     gekko.reboot();
-    gekko.write_u32(BASE_RW_ADRESS, 0b010000_10000_00000_00000000_001100_1_0);
+    gekko.write_u32(BASE_RW_ADRESS, 0b010000_10000_00000_00000000_000011_1_0);
     gekko.register.ctr = 5;
     gekko.step().unwrap();
     assert_eq!(gekko.register.ctr, 4);
@@ -161,7 +161,7 @@ fn test_bcx() {
     //cmpli 5, 0, r3, 10
     gekko.write_u32(BASE_RW_ADRESS, 0b001010_101_0_0_00011_00000000_00001010);
     //bc 0b01100 (5*4+2) 8 ;5*4+2=22
-    gekko.write_u32(BASE_RW_ADRESS + 4, 0b010000_01100_10110_00000000_001000_0_0);
+    gekko.write_u32(BASE_RW_ADRESS + 4, 0b010000_01100_10110_00000000_000010_0_0);
     //break
     gekko.write_u32(BASE_RW_ADRESS + 8, OPCODE_BREAK);
     //or r2, r3, r3
@@ -254,7 +254,7 @@ fn test_addi() {
 fn test_bx() {
     let mut gekko = GekkoInterpreter::new(8);
     //test "bl -4"
-    gekko.write_u32(BASE_RW_ADRESS+4, 0b010010_11_11111111_11111111_111100_0_1);
+    gekko.write_u32(BASE_RW_ADRESS + 4, 0b010010_11_11111111_11111111_111111_0_1);
     gekko.register.pc = BASE_RW_ADRESS + 4;
     gekko.step().unwrap();
     assert_eq!(gekko.register.pc, BASE_RW_ADRESS);

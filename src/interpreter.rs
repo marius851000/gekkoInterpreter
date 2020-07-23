@@ -123,9 +123,9 @@ impl GekkoInterpreter {
                         self.register.lr = self.register.pc + 4;
                     }
                     if aa {
-                        self.register.pc = (bd as i32) as u32;
+                        self.register.pc = ((bd as i32) << 2) as u32;
                     } else {
-                        self.register.pc = ((self.register.pc as i64) + (bd as i64)) as u32
+                        self.register.pc = ((self.register.pc as i64) + ((bd as i64) << 2)) as u32
                     }
                 } else {
                     self.register.increment_pc();
@@ -136,11 +136,11 @@ impl GekkoInterpreter {
                     self.register.lr = self.register.pc + 4;
                 };
                 if aa {
-                    self.register.pc = li as u32;
+                    self.register.pc = (li << 2) as u32;
                 } else {
-                    self.register.pc = (self.register.pc as i64 + li as i64) as u32;
+                    self.register.pc = (self.register.pc as i64 + ((li as i64) << 2)) as u32;
                 }
-            },
+            }
             Instruction::Rlwinmx(gpr_s, gpr_a, sh, mb, me, rc) => {
                 let mask = make_rotation_mask(mb as u32, me as u32);
                 self.register.gpr[gpr_a as usize] =
@@ -167,11 +167,18 @@ impl GekkoInterpreter {
                     0
                 } else {
                     self.register.gpr[gpr_a as usize] as i32
-                }).wrapping_add(simm as i32) as u32;
+                })
+                .wrapping_add(simm as i32)
+                    as u32;
                 self.register.increment_pc();
             }
             Instruction::Addi(gpr_d, gpr_a, simm) => {
-                self.register.gpr[gpr_d as usize] = (if gpr_a == 0 { 0 } else {self.register.gpr[gpr_a as usize]}).wrapping_add(simm as u32);
+                self.register.gpr[gpr_d as usize] = (if gpr_a == 0 {
+                    0
+                } else {
+                    self.register.gpr[gpr_a as usize]
+                })
+                .wrapping_add(simm as u32);
                 self.register.increment_pc();
             }
             Instruction::CustomBreak => {
