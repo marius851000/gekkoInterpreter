@@ -39,6 +39,7 @@ pub fn main() {
     let mut gekko = GekkoInterpreter::new(4);
     gekko.replace_memory(vec);
     gekko.register.gpr[1] = 0x805a54c0;
+    gekko.register.gpr[13] = 0x8058edc0;
 
     gekko.register.pc = 0x803047c4; //MKHeap::InitModule
     gekko.write_u32(0x8030482c, OPCODE_BREAK);

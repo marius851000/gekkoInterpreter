@@ -249,3 +249,13 @@ fn test_addi() {
     gekko.step().unwrap();
     assert_eq!(gekko.register.gpr[20], 0xFFF0);
 }
+
+#[test]
+fn test_bx() {
+    let mut gekko = GekkoInterpreter::new(8);
+    //test "bl -4"
+    gekko.write_u32(BASE_RW_ADRESS+4, 0b010010_11_11111111_11111111_111100_0_1);
+    gekko.register.pc = BASE_RW_ADRESS + 4;
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.pc, BASE_RW_ADRESS);
+}

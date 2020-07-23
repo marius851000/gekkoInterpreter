@@ -131,6 +131,16 @@ impl GekkoInterpreter {
                     self.register.increment_pc();
                 }
             }
+            Instruction::Bx(li, aa, lk) => {
+                if lk {
+                    self.register.lr = self.register.pc + 4;
+                };
+                if aa {
+                    self.register.pc = li as u32;
+                } else {
+                    self.register.pc = (self.register.pc as i64 + li as i64) as u32;
+                }
+            },
             Instruction::Rlwinmx(gpr_s, gpr_a, sh, mb, me, rc) => {
                 let mask = make_rotation_mask(mb as u32, me as u32);
                 self.register.gpr[gpr_a as usize] =
