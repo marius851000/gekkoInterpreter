@@ -3,6 +3,7 @@ use crate::GekkoRegister;
 use crate::Instruction;
 use crate::Spr;
 use crate::BASE_RW_ADRESS;
+use std::mem::replace;
 
 #[derive(Debug, PartialEq)]
 pub enum BreakData {
@@ -23,6 +24,10 @@ impl GekkoInterpreter {
         }
     }
 
+    pub fn replace_memory(&mut self, new_ram: Vec<u8>) -> Vec<u8> {
+        replace(&mut self.ram, new_ram)
+    }
+
     pub fn reboot(&mut self) {
         self.ram = vec![0; self.ram.len()];
         self.register = GekkoRegister::default();
@@ -30,10 +35,14 @@ impl GekkoInterpreter {
 
     pub fn step(&mut self) -> Result<BreakData, String> {
         // first, get the instruction
+        println!("----");
+        println!("pc: 0x{:x}", self.register.pc);
+        println!("inst: 0x{:x}", self.read_u32(self.register.pc));
         let instruction = Instruction::decode_instruction(self.read_u32(self.register.pc)).unwrap();
         // second, run it
         let mut break_data = BreakData::None;
         //println!("{:?}", &instruction);
+        println!("{:?}", instruction);
         match instruction {
             Instruction::Addx(gpr_dest, gpr_1, gpr_2, oe, rc) => {
                 let (result, overflow) = self.register.gpr[gpr_1 as usize]
@@ -132,7 +141,9 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Lwz(gpr_d, gpr_a, d) => {
+                println!("d: {}, a: {}, d: {}", gpr_d, gpr_a, d);
                 let address = self.register.compute_address_based_on_register(gpr_a, d);
+                println!("{:x}", self.register.pc);
                 self.register.gpr[gpr_d as usize] = self.read_u32(address);
                 self.register.increment_pc();
             }
