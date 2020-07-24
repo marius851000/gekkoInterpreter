@@ -25,7 +25,8 @@ pub enum Instruction {
     Mtspr(u8, Spr),                    //rS, Spr
     Bclrx(u8, u8, bool),               //BO, BI, LK
     Stwx(u8, u8, u8),                  //rS, rA, rB
-    Ori(u8, u8, u16), //rA, rS, UUIM
+    Ori(u8, u8, u16),                  //rA, rS, UUIM
+    Cmpl(u8, u8, u8),                  //crfD, rA, rB
     CustomBreak,
 }
 
@@ -108,6 +109,16 @@ impl Instruction {
                         debug_assert_eq!(get_bit_value(opcode, 31), false);
                         Instruction::Lwzx(
                             get_bit_section(opcode, 6, 5) as u8,
+                            get_bit_section(opcode, 11, 5) as u8,
+                            get_bit_section(opcode, 16, 5) as u8,
+                        )
+                    }
+                    32 => {
+                        debug_assert_eq!(get_bit_value(opcode, 21), false);
+                        debug_assert_eq!(get_bit_value(opcode, 31), false);
+                        debug_assert_eq!(get_bit_value(opcode, 10), false);
+                        Instruction::Cmpl(
+                            get_bit_section(opcode, 6, 3) as u8,
                             get_bit_section(opcode, 11, 5) as u8,
                             get_bit_section(opcode, 16, 5) as u8,
                         )

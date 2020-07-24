@@ -46,6 +46,7 @@ pub fn main() {
         gekko.register.pc = 0x803047c4; //MKHeap::InitModule
         gekko.write_u32(0x8030482c, OPCODE_BREAK);
     } else {
+        gekko.write_u32(0x80003158, 0x60000000); //nop some hardware init
         gekko.register.pc = 0x80003154; //start of the program
     }
     println!("{:?}", gekko.run_until_event());
