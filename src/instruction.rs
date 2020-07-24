@@ -25,6 +25,7 @@ pub enum Instruction {
     Mtspr(u8, Spr),                    //rS, Spr
     Bclrx(u8, u8, bool),               //BO, BI, LK
     Stwx(u8, u8, u8),                  //rS, rA, rB
+    Ori(u8, u8, u16), //rA, rS, UUIM
     CustomBreak,
 }
 
@@ -93,6 +94,11 @@ impl Instruction {
                 get_bit_section(opcode, 21, 5) as u8,
                 get_bit_section(opcode, 26, 5) as u8,
                 get_bit_value(opcode, 31),
+            ),
+            24 => Instruction::Ori(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                get_bit_section(opcode, 16, 16) as u16,
             ),
             31 => {
                 let extended_opcode = get_bit_section(opcode, 22, 9);

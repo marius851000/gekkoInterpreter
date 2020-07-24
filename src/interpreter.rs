@@ -251,6 +251,10 @@ impl GekkoInterpreter {
                 self.register.set_spr(spr, self.register.get_gpr(gpr_s));
                 self.register.increment_pc();
             }
+            Instruction::Ori(gpr_s, gpr_a, uuim) => {
+                self.register.set_gpr(gpr_s, self.register.get_gpr(gpr_a) | (uuim as u32));
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
