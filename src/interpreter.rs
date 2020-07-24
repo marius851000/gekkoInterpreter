@@ -45,7 +45,9 @@ impl GekkoInterpreter {
         println!("{:?}", instruction);
         match instruction {
             Instruction::Addx(gpr_dest, gpr_1, gpr_2, oe, rc) => {
-                let (result, overflow) = self.register.get_gpr(gpr_1)
+                let (result, overflow) = self
+                    .register
+                    .get_gpr(gpr_1)
                     .overflowing_add(self.register.get_gpr(gpr_2));
                 self.register.set_gpr(gpr_dest, result);
                 if oe {
@@ -63,10 +65,13 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Mfspr(gpr_d, spr) => {
-                self.register.set_gpr(gpr_d, match spr {
-                    Spr::LR => self.register.lr,
-                    x => panic!("mfspr: unimplemented for the LR {:?}", x),
-                });
+                self.register.set_gpr(
+                    gpr_d,
+                    match spr {
+                        Spr::LR => self.register.lr,
+                        x => panic!("mfspr: unimplemented for the LR {:?}", x),
+                    },
+                );
                 self.register.increment_pc();
             }
             Instruction::Cmpli(crf_d, gpr_a, uimm) => {
@@ -116,8 +121,10 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Orx(gpr_s, gpr_a, gpr_b, rc) => {
-                self.register.set_gpr(gpr_a,
-                    self.register.get_gpr(gpr_s) | self.register.get_gpr(gpr_b));
+                self.register.set_gpr(
+                    gpr_a,
+                    self.register.get_gpr(gpr_s) | self.register.get_gpr(gpr_b),
+                );
                 if rc {
                     panic!("orx: rc not implemented");
                 };
@@ -158,17 +165,17 @@ impl GekkoInterpreter {
             }
             Instruction::Rlwinmx(gpr_s, gpr_a, sh, mb, me, rc) => {
                 let mask = make_rotation_mask(mb as u32, me as u32);
-                self.register.set_gpr(gpr_a,
-                    self.register.get_gpr(gpr_s).rotate_left(sh as u32) & mask);
+                self.register.set_gpr(
+                    gpr_a,
+                    self.register.get_gpr(gpr_s).rotate_left(sh as u32) & mask,
+                );
                 if rc {
                     self.register.update_cr0(self.register.get_gpr(gpr_a));
                 };
                 self.register.increment_pc();
             }
             Instruction::Lwz(gpr_d, gpr_a, d) => {
-                println!("d: {}, a: {}, d: {}", gpr_d, gpr_a, d);
                 let address = self.register.compute_address_based_on_register(gpr_a, d);
-                println!("{:x}", self.register.pc);
                 let new_value = self.read_u32(address);
                 self.register.set_gpr(gpr_d, new_value);
                 self.register.increment_pc();
@@ -179,21 +186,27 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Addis(gpr_d, gpr_a, simm) => {
-                self.register.set_gpr(gpr_d, (if gpr_a == 0 {
-                    0
-                } else {
-                    self.register.get_gpr(gpr_a)
-                })
-                .wrapping_add((simm as u32) << 16));
+                self.register.set_gpr(
+                    gpr_d,
+                    (if gpr_a == 0 {
+                        0
+                    } else {
+                        self.register.get_gpr(gpr_a)
+                    })
+                    .wrapping_add((simm as u32) << 16),
+                );
                 self.register.increment_pc();
             }
             Instruction::Addi(gpr_d, gpr_a, simm) => {
-                self.register.set_gpr(gpr_d, (if gpr_a == 0 {
-                    0
-                } else {
-                    self.register.get_gpr(gpr_a)
-                })
-                .wrapping_add(simm as u32));
+                self.register.set_gpr(
+                    gpr_d,
+                    (if gpr_a == 0 {
+                        0
+                    } else {
+                        self.register.get_gpr(gpr_a)
+                    })
+                    .wrapping_add(simm as u32),
+                );
                 self.register.increment_pc();
             }
             Instruction::Lbz(gpr_d, gpr_a, d) => {
@@ -204,10 +217,8 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Extsbx(gpr_s, gpr_a, rc) => {
-                self.register.set_gpr(
-                    gpr_a,
-                    ((self.register.get_gpr(gpr_s) as i8) as i32) as u32,
-                );
+                self.register
+                    .set_gpr(gpr_a, ((self.register.get_gpr(gpr_s) as i8) as i32) as u32);
 
                 if rc {
                     self.register.update_cr0(self.register.get_gpr(gpr_a));
@@ -224,6 +235,17 @@ impl GekkoInterpreter {
 
                 let value = self.read_u32(address);
                 self.register.set_gpr(gpr_d, value);
+                self.register.increment_pc();
+            }
+            Instruction::Lmw(gpr_d, gpr_a, d) => {
+                let mut address = self.register.compute_address_based_on_register(gpr_a, d);
+                let mut r = self.register.get_gpr(gpr_d);
+                while r < 32 {
+                    let value = self.read_u32(address);
+                    self.register.set_gpr(r as u8, value);
+                    r += 1;
+                    address += 4;
+                };
                 self.register.increment_pc();
             }
             Instruction::CustomBreak => {

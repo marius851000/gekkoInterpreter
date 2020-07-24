@@ -270,10 +270,24 @@ fn test_extsbx() {
 fn test_lwzx() {
     let mut gekko = GekkoInterpreter::new(12);
     //test "lwzx r1, r2, r3"
-    gekko.write_u32(BASE_RW_ADRESS, 0b_011111_00001_00010_00011_0000010111_0);
+    gekko.write_u32(BASE_RW_ADRESS, 0b011111_00001_00010_00011_0000010111_0);
     gekko.write_u32(BASE_RW_ADRESS + 8, 0xABCDEF12);
     gekko.register.set_gpr(2, BASE_RW_ADRESS);
     gekko.register.set_gpr(3, 8);
     gekko.step().unwrap();
-    assert_eq!(gekko.register.get_gpr(1, 0xABCDEF12));
+    assert_eq!(gekko.register.get_gpr(1), 0xABCDEF12);
+}
+
+#[test]
+fn test_lmw() {
+    let mut gekko = GekkoInterpreter::new(20);
+    //test "lmw r20, 12(r3)"
+    gekko.write_u32(BASE_RW_ADRESS, 0b101110_10100_00011_00000000_00001100);
+    gekko.register.set_gpr(20, 30);
+    gekko.register.set_gpr(3, BASE_RW_ADRESS);
+    gekko.write_u32(BASE_RW_ADRESS + 12, 0xDEAD_0000);
+    gekko.write_u32(BASE_RW_ADRESS + 16, 0x0000_BEEF);
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.get_gpr(30), 0xDEAD_0000);
+    assert_eq!(gekko.register.get_gpr(31), 0x0000_BEEF);
 }
