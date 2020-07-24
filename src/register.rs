@@ -2,7 +2,7 @@ use crate::BASE_RW_ADRESS;
 
 pub struct GekkoRegister {
     // general purpose register
-    pub gpr: [u32; 32],
+    gpr: [u32; 32],
 
     // program counter (position of the cursor in the code)
     pub pc: u32,
@@ -19,6 +19,17 @@ pub struct GekkoRegister {
 }
 
 impl GekkoRegister {
+    #[inline]
+    pub fn get_gpr(&self, nb: u8) -> u32 {
+        self.gpr[nb as usize]
+    }
+
+    #[inline]
+    pub fn set_gpr(&mut self, nb: u8, data: u32) {
+        //DEBUG:
+        println!("wrote 0x{:x} to gpr {}", data, nb);
+        self.gpr[nb as usize] = data;
+    }
     #[inline]
     pub fn setxer_ov_so(&mut self, value: bool) {
         self.xer = (self.xer & 0xBFFFFFFF) | ((value as u32) << 30);

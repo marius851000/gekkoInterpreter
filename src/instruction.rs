@@ -14,11 +14,12 @@ pub enum Instruction {
     Rlwinmx(u8, u8, u8, u8, u8, bool), //rS, rA, SH, MB, ME, Rc
     Lwz(u8, u8, i16),                  //rD, rA, d
     Stb(u8, u8, i16),                  //rS, rA, d
-    Addis(u8, u8, i16),                //rD, rA, SIMM
+    Addis(u8, u8, u16),                //rD, rA, SIMM
     Addi(u8, u8, u16),                 //rD, rA, SIMM
     Bx(i32, bool, bool),               //LI, AA, LK
     Lbz(u8, u8, i16),                  //rD, rA, d
-    Extsbx(u8, u8, bool), //rS, rA, Rc
+    Extsbx(u8, u8, bool),              //rS, rA, Rc
+    Lwzx(u8, u8, u8),                  //rD, rA, rB
     CustomBreak,
 }
 
@@ -43,7 +44,7 @@ impl Instruction {
             15 => Instruction::Addis(
                 get_bit_section(opcode, 6, 5) as u8,
                 get_bit_section(opcode, 11, 5) as u8,
-                get_bit_section(opcode, 16, 16) as i16,
+                get_bit_section(opcode, 16, 16) as u16,
             ),
             16 => Instruction::Bcx(
                 get_bit_section(opcode, 6, 5) as u8,
@@ -68,6 +69,15 @@ impl Instruction {
             31 => {
                 let extended_opcode = get_bit_section(opcode, 22, 9);
                 match extended_opcode {
+                    23 => {
+                        debug_assert_eq!(get_bit_value(opcode, 21), false);
+                        debug_assert_eq!(get_bit_value(opcode, 31), false);
+                        Instruction::Lwzx(
+                            get_bit_section(opcode, 6, 5) as u8,
+                            get_bit_section(opcode, 11, 5) as u8,
+                            get_bit_section(opcode, 16, 5) as u8,
+                        )
+                    }
                     266 => Instruction::Addx(
                         get_bit_section(opcode, 6, 5) as u8,
                         get_bit_section(opcode, 11, 5) as u8,
