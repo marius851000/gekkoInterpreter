@@ -17,6 +17,7 @@ pub enum Instruction {
     Addis(u8, u8, i16),                //rD, rA, SIMM
     Addi(u8, u8, u16),                 //rD, rA, SIMM
     Bx(i32, bool, bool),               //LI, AA, LK
+    Lbz(u8, u8, i16),                  //rD, rA, d
     CustomBreak,
 }
 
@@ -93,6 +94,11 @@ impl Instruction {
                 }
             }
             32 => Instruction::Lwz(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                get_bit_section(opcode, 16, 16) as i16,
+            ),
+            34 => Instruction::Lbz(
                 get_bit_section(opcode, 6, 5) as u8,
                 get_bit_section(opcode, 11, 5) as u8,
                 get_bit_section(opcode, 16, 16) as i16,

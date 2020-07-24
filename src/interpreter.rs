@@ -181,6 +181,11 @@ impl GekkoInterpreter {
                 .wrapping_add(simm as u32);
                 self.register.increment_pc();
             }
+            Instruction::Lbz(gpr_d, gpr_a, d) => { //TODO: some unit test for it
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
+                self.register.gpr[gpr_d as usize] = self.read_u8(address) as u32;
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
