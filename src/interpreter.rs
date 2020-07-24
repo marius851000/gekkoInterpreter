@@ -161,7 +161,7 @@ impl GekkoInterpreter {
                 self.register.set_gpr(gpr_a,
                     self.register.get_gpr(gpr_s).rotate_left(sh as u32) & mask);
                 if rc {
-                    panic!("rlwinmx: rc not implemented");
+                    self.register.update_cr0(self.register.get_gpr(gpr_a));
                 };
                 self.register.increment_pc();
             }
