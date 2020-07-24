@@ -1,7 +1,6 @@
 use crate::util::{make_rotation_mask, u8_get_bit};
 use crate::GekkoRegister;
 use crate::Instruction;
-use crate::Spr;
 use crate::BASE_RW_ADRESS;
 use std::mem::replace;
 
@@ -67,10 +66,7 @@ impl GekkoInterpreter {
             Instruction::Mfspr(gpr_d, spr) => {
                 self.register.set_gpr(
                     gpr_d,
-                    match spr {
-                        Spr::LR => self.register.lr,
-                        x => panic!("mfspr: unimplemented for the LR {:?}", x),
-                    },
+                    self.register.get_spr(spr)
                 );
                 self.register.increment_pc();
             }
@@ -246,6 +242,10 @@ impl GekkoInterpreter {
                     r += 1;
                     address += 4;
                 };
+                self.register.increment_pc();
+            }
+            Instruction::Mtspr(gpr_s, spr) => {
+                self.register.set_spr(spr, self.register.get_gpr(gpr_s));
                 self.register.increment_pc();
             }
             Instruction::CustomBreak => {

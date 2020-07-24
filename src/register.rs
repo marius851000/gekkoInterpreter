@@ -76,6 +76,22 @@ impl GekkoRegister {
             self.gpr[gpr_a as usize] as i64
         }) + (d as i64)) as u32
     }
+
+    #[inline]
+    pub fn get_spr(&self, spr: Spr) -> u32 {
+        match spr {
+            Spr::LR => self.lr,
+            spr => todo!("getting the spr {:?}", spr),
+        }
+    }
+
+    #[inline]
+    pub fn set_spr(&mut self, spr: Spr, value: u32) {
+        match spr {
+            Spr::LR => self.lr = value,
+            spr => todo!("setting the spr {:?}", spr),
+        }
+    }
 }
 
 impl Default for GekkoRegister {
