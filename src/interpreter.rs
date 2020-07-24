@@ -221,14 +221,19 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Lwzx(gpr_d, gpr_a, gpr_b) => {
-                let address = if gpr_a == 0 {
-                    0
-                } else {
-                    self.register.get_gpr(gpr_a)
-                } + self.register.get_gpr(gpr_b);
+                let address = self
+                    .register
+                    .compute_address_based_on_pair_of_register(gpr_a, gpr_b);
 
                 let value = self.read_u32(address);
                 self.register.set_gpr(gpr_d, value);
+                self.register.increment_pc();
+            }
+            Instruction::Stwx(gpr_s, gpr_a, gpr_b) => {
+                let address = self
+                    .register
+                    .compute_address_based_on_pair_of_register(gpr_a, gpr_b);
+                self.write_u32(address, self.register.get_gpr(gpr_s));
                 self.register.increment_pc();
             }
             Instruction::Lmw(gpr_d, gpr_a, d) => {
@@ -262,8 +267,8 @@ impl GekkoInterpreter {
         let ctr_diff_0 = u8_get_bit(bo, 7 - 1);
         let ctr_ok = dont_use_ctr | ((self.register.ctr != 0) ^ ctr_diff_0);
         let dont_use_cond = u8_get_bit(bo, 7 - 4);
-        let cond_ok = dont_use_cond
-            | (self.register.get_bit_cr(bi as usize) == u8_get_bit(bo, 7 - 3));
+        let cond_ok =
+            dont_use_cond | (self.register.get_bit_cr(bi as usize) == u8_get_bit(bo, 7 - 3));
         (ctr_ok, cond_ok)
     }
 

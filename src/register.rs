@@ -93,6 +93,11 @@ impl GekkoRegister {
             spr => todo!("setting the spr {:?}", spr),
         }
     }
+
+    #[inline]
+    pub fn compute_address_based_on_pair_of_register(&self, gpr_a: u8, gpr_b: u8) -> u32 {
+        (if gpr_a == 0 { 0 } else { self.get_gpr(gpr_a) }) + self.get_gpr(gpr_b)
+    }
 }
 
 impl Default for GekkoRegister {

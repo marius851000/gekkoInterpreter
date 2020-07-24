@@ -38,7 +38,7 @@ pub fn main() {
 
     let mut gekko = GekkoInterpreter::new(4);
     gekko.replace_memory(vec);
-    if true {
+    if false {
         gekko.register.set_gpr(1, 0x805a5420);
         gekko.register.set_gpr(13, 0x8058edc0);
         gekko.register.lr = 0x8030ef84;
@@ -46,7 +46,7 @@ pub fn main() {
         gekko.register.pc = 0x803047c4; //MKHeap::InitModule
         gekko.write_u32(0x8030482c, OPCODE_BREAK);
     } else {
-        gekko.register.pc = 0x80003154;
+        gekko.register.pc = 0x80003154; //start of the program
     }
     println!("{:?}", gekko.run_until_event());
 }
