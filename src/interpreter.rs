@@ -116,6 +116,7 @@ impl GekkoInterpreter {
             }
             Instruction::Stw(gpr_s, gpr_a, d) => {
                 let address = self.register.compute_address_based_on_register(gpr_a, d);
+                println!("writing to 0x{:x}", address);
                 self.write_u32(address, self.register.get_gpr(gpr_s));
 
                 self.register.increment_pc();
@@ -274,11 +275,11 @@ impl GekkoInterpreter {
             }
             Instruction::Nor(gpr_s, gpr_a, gpr_b, rc) => {
                 self.register.set_gpr(
-                    gpr_s,
-                    !(self.register.get_gpr(gpr_a) | self.register.get_gpr(gpr_b)),
+                    gpr_a,
+                    !(self.register.get_gpr(gpr_s) | self.register.get_gpr(gpr_b)),
                 );
                 if rc {
-                    self.register.update_cr0(self.register.get_gpr(gpr_s));
+                    self.register.update_cr0(self.register.get_gpr(gpr_a));
                 }
                 self.register.increment_pc();
             }
