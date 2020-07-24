@@ -272,6 +272,16 @@ impl GekkoInterpreter {
                     .set_gpr(gpr_s, self.register.get_gpr(gpr_a) | (uuim as u32));
                 self.register.increment_pc();
             }
+            Instruction::Nor(gpr_s, gpr_a, gpr_b, rc) => {
+                self.register.set_gpr(
+                    gpr_s,
+                    !(self.register.get_gpr(gpr_a) | self.register.get_gpr(gpr_b)),
+                );
+                if rc {
+                    self.register.update_cr0(self.register.get_gpr(gpr_s));
+                }
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();

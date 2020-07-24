@@ -27,6 +27,7 @@ pub enum Instruction {
     Stwx(u8, u8, u8),                  //rS, rA, rB
     Ori(u8, u8, u16),                  //rA, rS, UUIM
     Cmpl(u8, u8, u8),                  //crfD, rA, rB
+    Nor(u8, u8, u8, bool),             //rS, rA, rB, Rc
     CustomBreak,
 }
 
@@ -121,6 +122,15 @@ impl Instruction {
                             get_bit_section(opcode, 6, 3) as u8,
                             get_bit_section(opcode, 11, 5) as u8,
                             get_bit_section(opcode, 16, 5) as u8,
+                        )
+                    }
+                    124 => {
+                        debug_assert_eq!(get_bit_value(opcode, 21), false);
+                        Instruction::Nor(
+                            get_bit_section(opcode, 6, 5) as u8,
+                            get_bit_section(opcode, 11, 5) as u8,
+                            get_bit_section(opcode, 16, 5) as u8,
+                            get_bit_value(opcode, 31),
                         )
                     }
                     151 => {
