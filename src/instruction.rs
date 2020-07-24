@@ -18,6 +18,7 @@ pub enum Instruction {
     Addi(u8, u8, u16),                 //rD, rA, SIMM
     Bx(i32, bool, bool),               //LI, AA, LK
     Lbz(u8, u8, i16),                  //rD, rA, d
+    Extsbx(u8, u8, bool), //rS, rA, Rc
     CustomBreak,
 }
 
@@ -79,6 +80,14 @@ impl Instruction {
                         Instruction::Mfspr(
                             get_bit_section(opcode, 6, 5) as u8,
                             Spr::decode_from_mfspr(get_bit_section(opcode, 11, 10) as u16),
+                        )
+                    }
+                    442 => {
+                        debug_assert_eq!(get_bit_section(opcode, 16, 6), 0b000001);
+                        Instruction::Extsbx(
+                            get_bit_section(opcode, 6, 5) as u8,
+                            get_bit_section(opcode, 11, 5) as u8,
+                            get_bit_value(opcode, 31),
                         )
                     }
                     444 => {

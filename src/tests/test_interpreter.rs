@@ -259,3 +259,14 @@ fn test_bx() {
     gekko.step().unwrap();
     assert_eq!(gekko.register.pc, BASE_RW_ADRESS);
 }
+
+#[test]
+fn test_extsbx() {
+    let mut gekko = GekkoInterpreter::new(4);
+    //test "extsbx. r3, r4"
+    gekko.write_u32(BASE_RW_ADRESS, 0b011111_00100_00011_00000_1110111010_1);
+    gekko.register.gpr[4] = 0x0F0F0FF0;
+    gekko.step().unwrap();
+    assert_eq!(gekko.register.gpr[3], 0xFFFFFFF0);
+    assert_eq!(gekko.register.cr[0], 0x8);
+}

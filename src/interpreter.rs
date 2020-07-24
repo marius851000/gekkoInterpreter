@@ -186,6 +186,15 @@ impl GekkoInterpreter {
                 self.register.gpr[gpr_d as usize] = self.read_u8(address) as u32;
                 self.register.increment_pc();
             }
+            Instruction::Extsbx(gpr_s, gpr_a, rc) => {
+                self.register.gpr[gpr_a as usize] = ((self.register.gpr[gpr_s as usize] as i8) as i32) as u32;
+
+                if rc {
+                    self.register.update_cr0(self.register.gpr[gpr_a as usize]);
+                }
+
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();

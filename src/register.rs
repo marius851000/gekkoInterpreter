@@ -31,8 +31,15 @@ impl GekkoRegister {
     }
 
     #[inline]
-    pub fn update_cr0(&mut self, _value: u32) {
-        todo!("update_cr0 is not yet implemented")
+    pub fn update_cr0(&mut self, value: u32) {
+        let value = value as i32;
+        self.cr[0] = if value < 0 {
+            0x8
+        } else if value > 0 {
+            0x4
+        } else {
+            0x2
+        } | (self.get_xer_so() as u8);
     }
 
     #[inline]
