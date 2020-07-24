@@ -69,10 +69,25 @@ impl GekkoInterpreter {
                 });
                 self.register.increment_pc();
             }
-            Instruction::Cmpli(crf_d, l, gpr_a, uimm) => {
-                assert_eq!(l, false);
+            Instruction::Cmpli(crf_d, gpr_a, uimm) => {
                 let a = self.register.get_gpr(gpr_a);
                 let b = uimm as u32;
+                let f = if a < b {
+                    0x8
+                } else if a > b {
+                    0x4
+                } else {
+                    0x2
+                } | (self.register.get_xer_so() as u8);
+
+                self.register.cr[crf_d as usize] = f;
+
+                self.register.increment_pc();
+            }
+            //TODO: test
+            Instruction::Cmpi(crf_d, gpr_a, uimm) => {
+                let a = self.register.get_gpr(gpr_a) as i32;
+                let b = uimm as i32;
                 let f = if a < b {
                     0x8
                 } else if a > b {

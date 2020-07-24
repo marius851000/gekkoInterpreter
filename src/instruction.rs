@@ -6,7 +6,8 @@ pub enum Instruction {
     Addx(u8, u8, u8, bool, bool),      // D, A, B, OE, Rc
     Stwu(u8, u8, i16),                 // S, A, d
     Mfspr(u8, Spr),                    // D, spr
-    Cmpli(u8, bool, u8, u16),          //crfD, L, rA, UIMM
+    Cmpli(u8, u8, u16),          //crfD, L, rA, UIMM
+    Cmpi(u8, u8, i16),          //crfD, L, rA, UIMM
     Stw(u8, u8, i16),                  //rS, rA, d
     Stmw(u8, u8, i16),                 //rS, rA, d
     Orx(u8, u8, u8, bool),             //rS, rA, rB, Rc
@@ -29,11 +30,21 @@ impl Instruction {
         Some(match primary_opcode {
             10 => {
                 debug_assert_eq!(get_bit_value(opcode, 9), false);
+                debug_assert_eq!(get_bit_value(opcode, 10), false);
                 Instruction::Cmpli(
                     get_bit_section(opcode, 6, 3) as u8,
-                    get_bit_value(opcode, 10),
                     get_bit_section(opcode, 11, 5) as u8,
                     get_bit_section(opcode, 16, 16) as u16,
+                )
+            }
+            11 => {
+                debug_assert_eq!(get_bit_value(opcode, 9), false);
+                debug_assert_eq!(get_bit_value(opcode, 10), false);
+                Instruction::Cmpi(
+                    get_bit_section(opcode, 6, 3) as u8,
+                    get_bit_section(opcode, 11, 5) as u8,
+                    get_bit_section(opcode, 16, 16) as i16,
+
                 )
             }
             14 => Instruction::Addi(
