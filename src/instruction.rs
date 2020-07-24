@@ -22,7 +22,8 @@ pub enum Instruction {
     Extsbx(u8, u8, bool),              //rS, rA, Rc
     Lwzx(u8, u8, u8),                  //rD, rA, rB
     Lmw(u8, u8, i16),                  //rD, rA, d
-    Mtspr(u8, Spr), //rS, Spr
+    Mtspr(u8, Spr),                    //rS, Spr
+    Bclrx(u8, u8, bool),               //BO, BI, LK
     CustomBreak,
 }
 
@@ -65,6 +66,20 @@ impl Instruction {
                 get_bit_value(opcode, 30),
                 get_bit_value(opcode, 31),
             ),
+            19 => {
+                let secondary_opcode = get_bit_section(opcode, 21, 10);
+                match secondary_opcode {
+                    16 => {
+                        debug_assert_eq!(get_bit_section(opcode, 16, 5), 0);
+                        Instruction::Bclrx(
+                            get_bit_section(opcode, 6, 5) as u8,
+                            get_bit_section(opcode, 11, 5) as u8,
+                            get_bit_value(opcode, 31),
+                        )
+                    }
+                    _ => return None,
+                }
+            }
             18 => Instruction::Bx(
                 extend_sign_32(get_bit_section(opcode, 6, 24), 24),
                 get_bit_value(opcode, 30),

@@ -89,6 +89,7 @@ impl GekkoRegister {
     pub fn set_spr(&mut self, spr: Spr, value: u32) {
         match spr {
             Spr::LR => self.lr = value,
+            Spr::CTR => self.ctr = value,
             spr => todo!("setting the spr {:?}", spr),
         }
     }
@@ -117,7 +118,8 @@ pub enum Spr {
 impl Spr {
     #[inline]
     pub fn decode_from_mfspr(data: u16) -> Spr {
-        debug_assert_eq!(data << (15 - 5), 0);
+        println!("spr: 0b{:b}", data);
+        debug_assert_eq!(data << (16 - 5), 0);
         match data >> 5 {
             0b00001 => Spr::XER,
             0b01000 => Spr::LR,

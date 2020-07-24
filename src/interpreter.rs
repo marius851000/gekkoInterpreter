@@ -64,10 +64,7 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Mfspr(gpr_d, spr) => {
-                self.register.set_gpr(
-                    gpr_d,
-                    self.register.get_spr(spr)
-                );
+                self.register.set_gpr(gpr_d, self.register.get_spr(spr));
                 self.register.increment_pc();
             }
             Instruction::Cmpli(crf_d, gpr_a, uimm) => {
@@ -127,15 +124,7 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Bcx(bo, bi, bd, aa, lk) => {
-                let dont_use_ctr = u8_get_bit(bo, 7 - 2);
-                if !dont_use_ctr {
-                    self.register.decrement_ctr();
-                };
-                let ctr_diff_0 = u8_get_bit(bo, 7 - 1);
-                let ctr_ok = dont_use_ctr | ((self.register.ctr != 0) ^ ctr_diff_0);
-                let dont_use_cond = u8_get_bit(bo, 7 - 4);
-                let cond_ok = dont_use_cond
-                    | (self.register.get_bit_cr(bi as usize) == u8_get_bit(bo, 7 - 3));
+                let (ctr_ok, cond_ok) = self.check_and_apply_conditional_jump(bo, bi);
                 if ctr_ok & cond_ok {
                     if lk {
                         self.register.lr = self.register.pc + 4;
@@ -147,6 +136,15 @@ impl GekkoInterpreter {
                     }
                 } else {
                     self.register.increment_pc();
+                }
+            }
+            Instruction::Bclrx(bo, bi, lk) => {
+                let (ctr_ok, cond_ok) = self.check_and_apply_conditional_jump(bo, bi);
+                if ctr_ok & cond_ok {
+                    self.register.pc = (self.register.lr >> 2) << 2;
+                    if lk {
+                        self.register.lr = self.register.pc + 4;
+                    }
                 }
             }
             Instruction::Bx(li, aa, lk) => {
@@ -241,7 +239,7 @@ impl GekkoInterpreter {
                     self.register.set_gpr(r as u8, value);
                     r += 1;
                     address += 4;
-                };
+                }
                 self.register.increment_pc();
             }
             Instruction::Mtspr(gpr_s, spr) => {
@@ -254,6 +252,19 @@ impl GekkoInterpreter {
             }
         };
         Ok(break_data)
+    }
+
+    fn check_and_apply_conditional_jump(&mut self, bo: u8, bi: u8) -> (bool, bool) {
+        let dont_use_ctr = u8_get_bit(bo, 7 - 2);
+        if !dont_use_ctr {
+            self.register.decrement_ctr();
+        };
+        let ctr_diff_0 = u8_get_bit(bo, 7 - 1);
+        let ctr_ok = dont_use_ctr | ((self.register.ctr != 0) ^ ctr_diff_0);
+        let dont_use_cond = u8_get_bit(bo, 7 - 4);
+        let cond_ok = dont_use_cond
+            | (self.register.get_bit_cr(bi as usize) == u8_get_bit(bo, 7 - 3));
+        (ctr_ok, cond_ok)
     }
 
     pub fn run_until_event(&mut self) -> BreakData {
