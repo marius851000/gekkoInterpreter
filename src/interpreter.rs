@@ -44,7 +44,7 @@ impl GekkoInterpreter {
     pub fn step(&mut self) -> Result<BreakData, String> {
         self.counter += 1;
         // first, get the instruction
-        if self.register.pc == 0x802a2500 {
+        if self.register.pc == 0x80003264 {
             self.log = true;
         }
         if self.log {
@@ -268,7 +268,8 @@ impl GekkoInterpreter {
                     .register
                     .get_gpr(gpr_a)
                     .overflowing_add(self.register.get_gpr(gpr_b));
-                let (sum_with_carry, overflow_2) = sum.overflowing_add(if self.register.get_carry() {1} else {0});
+                let (sum_with_carry, overflow_2) =
+                    sum.overflowing_add(if self.register.get_carry() { 1 } else { 0 });
                 self.register.set_gpr(gpr_d, sum_with_carry);
                 if oe {
                     self.register.update_cr0(sum_with_carry);
@@ -361,6 +362,12 @@ impl GekkoInterpreter {
                 );
                 self.register.increment_pc();
             }
+            Instruction::Lhz(gpr_d, gpr_a, d) => {
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
+                let value = self.read_u16(address) as u32;
+                self.register.set_gpr(gpr_d, value);
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
@@ -418,6 +425,14 @@ impl GekkoInterpreter {
             offset += 1;
         }
         u32::from_be_bytes(buffer)
+    }
+
+    #[inline]
+    pub fn read_u16(&mut self, mut offset: u32) -> u16 {
+        offset -= BASE_RW_ADRESS;
+        let v1 = self.ram[offset as usize];
+        let v2 = self.ram[(offset as usize) + 1];
+        u16::from_be_bytes([v1, v2])
     }
 
     #[inline]

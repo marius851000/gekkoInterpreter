@@ -33,6 +33,7 @@ pub enum Instruction {
     Mftb(u8, Tbr),                     //rD, tbr
     Addcx(u8, u8, u8, bool, bool),     //rD, rA, rB, OE, Rc
     Addex(u8, u8, u8, bool, bool),     //rD, rA, rB, OE, Rc
+    Lhz(u8, u8, i16),                  //rD, rA, d
     CustomBreak,
 }
 
@@ -247,6 +248,11 @@ impl Instruction {
                 get_bit_section(opcode, 16, 16) as i16,
             ),
             38 => Instruction::Stb(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                get_bit_section(opcode, 16, 16) as i16,
+            ),
+            40 => Instruction::Lhz(
                 get_bit_section(opcode, 6, 5) as u8,
                 get_bit_section(opcode, 11, 5) as u8,
                 get_bit_section(opcode, 16, 16) as i16,

@@ -41,6 +41,16 @@ pub fn main() {
 
     let instruction_to_blr = [
         0x8029ee88, //OSDisableInterrupts
+        0x8029eeb0, //OSRestoreInterrupts
+        0x80299980, //PPCMtmmcr0
+        0x80299988, //PPCMtmmcr1
+        0x80299990, //PPCMtpmc1
+        0x80299998, //PPCMtpmc2
+        0x802999a0, //PPCMtpmc3
+        0x802999a8, //PPCMtpmc4
+        0x80299a10, //PPCDisableSpeculation
+        0x80299a38, //PPCSetFpNonIEEEMode
+        0x80299cb8, //OSInit, tmp
     ];
 
     for offset in instruction_to_blr.iter() {
