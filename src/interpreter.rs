@@ -374,6 +374,20 @@ impl GekkoInterpreter {
                 self.register.update_cr0(value);
                 self.register.increment_pc();
             }
+            Instruction::Subfx(gpr_d, gpr_a, gpr_b, oe, rc) => {
+                let (result, overflow) = self
+                    .register
+                    .get_gpr(gpr_a)
+                    .overflowing_sub(self.register.get_gpr(gpr_b));
+                self.register.set_gpr(gpr_d, result);
+                if oe {
+                    self.register.setxer_ov_so(overflow);
+                }
+                if rc {
+                    self.register.update_cr0(result);
+                }
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
