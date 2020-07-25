@@ -388,6 +388,10 @@ impl GekkoInterpreter {
                 }
                 self.register.increment_pc();
             }
+            Instruction::Crxor(crb_d, crb_a, crb_b) => {
+                self.register.set_bit_cr(crb_d as usize, self.register.get_bit_cr(crb_a as usize) ^ self.register.get_bit_cr(crb_b as usize));
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();

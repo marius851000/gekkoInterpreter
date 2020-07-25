@@ -66,6 +66,14 @@ impl GekkoRegister {
     }
 
     #[inline]
+    pub fn set_bit_cr(&mut self, cr_bit: usize, value: bool) {
+        let cr_value = &mut self.cr[cr_bit / 4];
+        let bit_number = cr_bit % 4;
+        *cr_value &= 0b1110111 >> bit_number;
+        *cr_value |= (if value {1} else {0}) << (3-bit_number);
+    }
+
+    #[inline]
     pub fn decrement_ctr(&mut self) {
         self.ctr = self.ctr.wrapping_sub(1);
     }
