@@ -50,7 +50,7 @@ pub fn main() {
         0x802999a8, //PPCMtpmc4
         0x80299a10, //PPCDisableSpeculation
         0x80299a38, //PPCSetFpNonIEEEMode
-        0x80299cb8, //OSInit, tmp
+        //0x80299cb8, //OSInit, tmp
     ];
 
     for offset in instruction_to_blr.iter() {

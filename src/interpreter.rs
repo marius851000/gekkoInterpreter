@@ -368,6 +368,12 @@ impl GekkoInterpreter {
                 self.register.set_gpr(gpr_d, value);
                 self.register.increment_pc();
             }
+            Instruction::Andidot(gpr_s, gpr_a, d) => {
+                let value = self.register.get_gpr(gpr_a) & (d as u32);
+                self.register.set_gpr(gpr_s, value);
+                self.register.update_cr0(value);
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
