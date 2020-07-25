@@ -32,6 +32,7 @@ pub enum Instruction {
     Addicdot(u8, u8, i16),             //rD, rA, simm
     Mftb(u8, Tbr),                     //rD, tbr
     Addcx(u8, u8, u8, bool, bool),     //rD, rA, rB, OE, Rc
+    Addex(u8, u8, u8, bool, bool),     //rD, rA, rB, OE, Rc
     CustomBreak,
 }
 
@@ -160,6 +161,13 @@ impl Instruction {
                             get_bit_value(opcode, 31),
                         )
                     }
+                    138 => Instruction::Addex(
+                        get_bit_section(opcode, 6, 5) as u8,
+                        get_bit_section(opcode, 11, 5) as u8,
+                        get_bit_section(opcode, 16, 5) as u8,
+                        get_bit_value(opcode, 21),
+                        get_bit_value(opcode, 31),
+                    ),
                     151 => {
                         debug_assert_eq!(get_bit_value(opcode, 21), false);
                         debug_assert_eq!(get_bit_value(opcode, 31), false);

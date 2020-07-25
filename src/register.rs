@@ -103,7 +103,13 @@ impl GekkoRegister {
 
     #[inline]
     pub fn set_carry(&mut self, value: bool) {
+        self.xer &= 0b11011111_11111111_11111111_11111111;
         self.xer |= (value as u32) << 29;
+    }
+
+    #[inline]
+    pub fn get_carry(&self) -> bool {
+        (self.xer & (1 << 29)) != 0
     }
 }
 

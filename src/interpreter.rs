@@ -263,6 +263,23 @@ impl GekkoInterpreter {
                 }
                 self.register.increment_pc();
             }
+            Instruction::Addex(gpr_d, gpr_a, gpr_b, oe, rc) => {
+                let (sum, overflow_1) = self
+                    .register
+                    .get_gpr(gpr_a)
+                    .overflowing_add(self.register.get_gpr(gpr_b));
+                let (sum_with_carry, overflow_2) = sum.overflowing_add(if self.register.get_carry() {1} else {0});
+                self.register.set_gpr(gpr_d, sum_with_carry);
+                if oe {
+                    self.register.update_cr0(sum_with_carry);
+                }
+                if rc {
+                    let overflow = overflow_1 && overflow_2;
+                    self.register.setxer_ov_so(overflow);
+                    self.register.set_carry(overflow);
+                }
+                self.register.increment_pc();
+            }
             Instruction::Lbz(gpr_d, gpr_a, d) => {
                 //TODO: some unit test for it
                 let address = self.register.compute_address_based_on_register(gpr_a, d);
