@@ -288,6 +288,14 @@ impl GekkoInterpreter {
                 self.register.set_gpr(gpr_d, new_value);
                 self.register.increment_pc();
             }
+            Instruction::Lbzu(gpr_d, gpr_a, d) => {
+                //TODO: some unit test for it
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
+                let new_value = self.read_u8(address) as u32;
+                self.register.set_gpr(gpr_d, new_value);
+                self.register.set_gpr(gpr_a, address);
+                self.register.increment_pc();
+            }
             Instruction::Extsbx(gpr_s, gpr_a, rc) => {
                 self.register
                     .set_gpr(gpr_a, ((self.register.get_gpr(gpr_s) as i8) as i32) as u32);

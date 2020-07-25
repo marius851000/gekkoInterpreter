@@ -37,6 +37,7 @@ pub enum Instruction {
     Andidot(u8, u8, u16),              //rD, rA, d
     Subfx(u8, u8, u8, bool, bool),     //rD, rA, rB, OE, Rc
     Crxor(u8, u8, u8), //crbD, crbA, crbB
+    Lbzu(u8, u8, i16), //rD, rA, d
     CustomBreak,
 }
 
@@ -256,6 +257,11 @@ impl Instruction {
                 get_bit_section(opcode, 16, 16) as i16,
             ),
             34 => Instruction::Lbz(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                get_bit_section(opcode, 16, 16) as i16,
+            ),
+            35 => Instruction::Lbzu(
                 get_bit_section(opcode, 6, 5) as u8,
                 get_bit_section(opcode, 11, 5) as u8,
                 get_bit_section(opcode, 16, 16) as i16,
