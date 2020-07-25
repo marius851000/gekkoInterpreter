@@ -189,10 +189,13 @@ impl GekkoInterpreter {
             Instruction::Bclrx(bo, bi, lk) => {
                 let (ctr_ok, cond_ok) = self.check_and_apply_conditional_jump(bo, bi);
                 if ctr_ok & cond_ok {
+                    let old_pc = self.register.pc;
                     self.register.pc = (self.register.lr >> 2) << 2;
                     if lk {
-                        self.register.lr = self.register.pc + 4;
+                        self.register.lr = old_pc + 4;
                     }
+                } else {
+                    self.register.increment_pc();
                 }
             }
             Instruction::Bx(li, aa, lk) => {
