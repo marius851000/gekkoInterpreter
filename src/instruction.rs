@@ -8,7 +8,7 @@ pub enum Instruction {
     Mfspr(u8, Spr),                    //rD, spr
     Cmpli(u8, u8, u16),                //crfD, L, rA, UIMM
     Cmpi(u8, u8, i16),                 //crfD, L, rA, UIMM
-    Cmp(u8, u8, u8),                 //crfD, L, rA, UIMM
+    Cmp(u8, u8, u8),                   //crfD, L, rA, UIMM
     Stw(u8, u8, i16),                  //rS, rA, d
     Stmw(u8, u8, i16),                 //rS, rA, d
     Orx(u8, u8, u8, bool),             //rS, rA, rB, Rc
@@ -31,6 +31,7 @@ pub enum Instruction {
     Nor(u8, u8, u8, bool),             //rS, rA, rB, Rc
     Addicdot(u8, u8, i16),             //rD, rA, simm
     Mftb(u8, Tbr),                     //rD, tbr
+    Addcx(u8, u8, u8, bool, bool),     //rD, rA, rB, OE, Rc
     CustomBreak,
 }
 
@@ -124,6 +125,13 @@ impl Instruction {
                             get_bit_section(opcode, 16, 5) as u8,
                         )
                     }
+                    10 => Instruction::Addcx(
+                        get_bit_section(opcode, 6, 5) as u8,
+                        get_bit_section(opcode, 11, 5) as u8,
+                        get_bit_section(opcode, 16, 5) as u8,
+                        get_bit_value(opcode, 21),
+                        get_bit_value(opcode, 31),
+                    ),
                     23 => {
                         debug_assert_eq!(get_bit_value(opcode, 21), false);
                         debug_assert_eq!(get_bit_value(opcode, 31), false);
