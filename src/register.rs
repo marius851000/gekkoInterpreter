@@ -21,6 +21,7 @@ pub struct GekkoRegister {
 impl GekkoRegister {
     #[inline]
     pub fn get_gpr(&self, nb: u8) -> u32 {
+        println!("read 0x{:x} from gpr {}", self.gpr[nb as usize], nb);
         self.gpr[nb as usize]
     }
 
@@ -73,7 +74,7 @@ impl GekkoRegister {
         ((if gpr_a == 0 {
             0
         } else {
-            self.gpr[gpr_a as usize] as i64
+            self.get_gpr(gpr_a) as i64
         }) + (d as i64)) as u32
     }
 
@@ -97,6 +98,11 @@ impl GekkoRegister {
     #[inline]
     pub fn compute_address_based_on_pair_of_register(&self, gpr_a: u8, gpr_b: u8) -> u32 {
         (if gpr_a == 0 { 0 } else { self.get_gpr(gpr_a) }) + self.get_gpr(gpr_b)
+    }
+
+    #[inline]
+    pub fn set_carry(&mut self, value: bool) {
+        self.xer |= (value as u32) << 29;
     }
 }
 
@@ -123,7 +129,6 @@ pub enum Spr {
 impl Spr {
     #[inline]
     pub fn decode_from_mfspr(data: u16) -> Spr {
-        println!("spr: 0b{:b}", data);
         debug_assert_eq!(data << (16 - 5), 0);
         match data >> 5 {
             0b00001 => Spr::XER,

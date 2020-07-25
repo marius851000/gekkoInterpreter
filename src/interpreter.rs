@@ -33,6 +33,11 @@ impl GekkoInterpreter {
     }
 
     pub fn step(&mut self) -> Result<BreakData, String> {
+
+
+
+
+
         // first, get the instruction
         println!("----");
         println!("pc: 0x{:x}", self.register.pc);
@@ -40,8 +45,8 @@ impl GekkoInterpreter {
         let instruction = Instruction::decode_instruction(self.read_u32(self.register.pc)).unwrap();
         // second, run it
         let mut break_data = BreakData::None;
-        //println!("{:?}", &instruction);
-        println!("{:?}", instruction);
+        println!("{:?}", &instruction);
+        //println!("{:?}", instruction);
         match instruction {
             Instruction::Addx(gpr_dest, gpr_1, gpr_2, oe, rc) => {
                 let (result, overflow) = self
@@ -116,7 +121,6 @@ impl GekkoInterpreter {
             }
             Instruction::Stw(gpr_s, gpr_a, d) => {
                 let address = self.register.compute_address_based_on_register(gpr_a, d);
-                println!("writing to 0x{:x}", address);
                 self.write_u32(address, self.register.get_gpr(gpr_s));
 
                 self.register.increment_pc();
@@ -216,7 +220,7 @@ impl GekkoInterpreter {
                     } else {
                         self.register.get_gpr(gpr_a)
                     })
-                    .wrapping_add(simm as u32),
+                    .wrapping_add((simm as i32) as u32),
                 );
                 self.register.increment_pc();
             }
@@ -283,6 +287,14 @@ impl GekkoInterpreter {
                 }
                 self.register.increment_pc();
             }
+            Instruction::Addicdot(gpr_d, gpr_a, simm) => {
+                let a = self.register.get_gpr(gpr_a);
+                let (d, overflow) = a.overflowing_add((simm as i32) as u32);
+                self.register.set_gpr(gpr_d, d);
+                self.register.set_carry(overflow);
+                self.register.update_cr0(self.register.get_gpr(gpr_d));
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
@@ -319,6 +331,12 @@ impl GekkoInterpreter {
 
     #[inline]
     pub fn write_u32(&mut self, mut offset: u32, data: u32) {
+        if offset == 0x805a549c {
+            if data == 0 {
+                panic!()
+            }
+            println!("wrote to {} with 0x{:x}", offset, data);
+        }
         offset -= BASE_RW_ADRESS;
         for d in &data.to_be_bytes() {
             self.ram[offset as usize] = *d;
