@@ -22,14 +22,14 @@ pub struct GekkoRegister {
 impl GekkoRegister {
     #[inline]
     pub fn get_gpr(&self, nb: u8) -> u32 {
-        println!("read 0x{:x} from gpr {}", self.gpr[nb as usize], nb);
+        //println!("read 0x{:x} from gpr {}", self.gpr[nb as usize], nb);
         self.gpr[nb as usize]
     }
 
     #[inline]
     pub fn set_gpr(&mut self, nb: u8, data: u32) {
         //DEBUG:
-        println!("wrote 0x{:x} to gpr {}", data, nb);
+        //println!("wrote 0x{:x} to gpr {}", data, nb);
         self.gpr[nb as usize] = data;
     }
     #[inline]
@@ -129,7 +129,6 @@ pub enum Tbr {
 impl Tbr {
     #[inline]
     pub fn decode_from_mftb(data: u16) -> Tbr {
-        println!("0b{:b}", data);
         debug_assert_eq!(u16_get_section(data, 16 - 5, 5), 0b01000);
         match data >> 5 {
             0b01100 => Tbr::Tbl,

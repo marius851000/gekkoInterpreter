@@ -15,6 +15,7 @@ pub struct GekkoInterpreter {
     pub ram: Vec<u8>,
     pub register: GekkoRegister,
     pub counter: u64,
+    pub log: bool,
 }
 
 impl GekkoInterpreter {
@@ -23,11 +24,12 @@ impl GekkoInterpreter {
             ram: vec![0; ram_amount],
             register: GekkoRegister::default(),
             counter: 0,
+            log: false,
         }
     }
 
     pub fn get_timebase(&self) -> u64 {
-        self.counter
+        self.counter >> 3
     }
 
     pub fn replace_memory(&mut self, new_ram: Vec<u8>) -> Vec<u8> {
@@ -42,14 +44,16 @@ impl GekkoInterpreter {
     pub fn step(&mut self) -> Result<BreakData, String> {
         self.counter += 1;
         // first, get the instruction
-        println!("----");
-        println!("pc: 0x{:x}", self.register.pc);
-        //println!("inst: 0x{:x}", self.read_u32(self.register.pc));
+        if self.register.pc == 0x802a2500 {
+            self.log = true;
+        }
+        if self.log {
+            println!("----");
+            println!("pc: 0x{:x}", self.register.pc);
+        };
         let instruction = Instruction::decode_instruction(self.read_u32(self.register.pc)).unwrap();
         // second, run it
         let mut break_data = BreakData::None;
-        println!("{:?}", &instruction);
-        //println!("{:?}", instruction);
         match instruction {
             Instruction::Addx(gpr_dest, gpr_1, gpr_2, oe, rc) => {
                 let (result, overflow) = self
@@ -110,6 +114,22 @@ impl GekkoInterpreter {
             Instruction::Cmpi(crf_d, gpr_a, uimm) => {
                 let a = self.register.get_gpr(gpr_a) as i32;
                 let b = uimm as i32;
+                let f = if a < b {
+                    0x8
+                } else if a > b {
+                    0x4
+                } else {
+                    0x2
+                } | (self.register.get_xer_so() as u8);
+
+                self.register.cr[crf_d as usize] = f;
+
+                self.register.increment_pc();
+            }
+            //TODO: test
+            Instruction::Cmp(crf_d, gpr_a, gpr_b) => {
+                let a = self.register.get_gpr(gpr_a) as i32;
+                let b = self.register.get_gpr(gpr_b) as i32;
                 let f = if a < b {
                     0x8
                 } else if a > b {
@@ -344,12 +364,6 @@ impl GekkoInterpreter {
 
     #[inline]
     pub fn write_u32(&mut self, mut offset: u32, data: u32) {
-        if offset == 0x805a549c {
-            if data == 0 {
-                panic!()
-            }
-            println!("wrote to {} with 0x{:x}", offset, data);
-        }
         offset -= BASE_RW_ADRESS;
         for d in &data.to_be_bytes() {
             self.ram[offset as usize] = *d;

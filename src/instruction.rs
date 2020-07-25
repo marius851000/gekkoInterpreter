@@ -8,6 +8,7 @@ pub enum Instruction {
     Mfspr(u8, Spr),                    //rD, spr
     Cmpli(u8, u8, u16),                //crfD, L, rA, UIMM
     Cmpi(u8, u8, i16),                 //crfD, L, rA, UIMM
+    Cmp(u8, u8, u8),                 //crfD, L, rA, UIMM
     Stw(u8, u8, i16),                  //rS, rA, d
     Stmw(u8, u8, i16),                 //rS, rA, d
     Orx(u8, u8, u8, bool),             //rS, rA, rB, Rc
@@ -112,6 +113,17 @@ impl Instruction {
             31 => {
                 let extended_opcode = get_bit_section(opcode, 22, 9);
                 match extended_opcode {
+                    0 => {
+                        debug_assert_eq!(get_bit_value(opcode, 21), false);
+                        debug_assert_eq!(get_bit_value(opcode, 31), false);
+                        debug_assert_eq!(get_bit_value(opcode, 9), false);
+                        debug_assert_eq!(get_bit_value(opcode, 10), false);
+                        Instruction::Cmp(
+                            get_bit_section(opcode, 6, 3) as u8,
+                            get_bit_section(opcode, 11, 5) as u8,
+                            get_bit_section(opcode, 16, 5) as u8,
+                        )
+                    }
                     23 => {
                         debug_assert_eq!(get_bit_value(opcode, 21), false);
                         debug_assert_eq!(get_bit_value(opcode, 31), false);
