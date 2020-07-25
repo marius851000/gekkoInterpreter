@@ -239,10 +239,10 @@ fn test_addi() {
     gekko.step().unwrap();
     assert_eq!(gekko.register.get_gpr(4), 35);
     gekko.reboot();
-    //test "addi r20, 0, 0xFFF0"
+    //test "addi r20, 0, -16"
     gekko.write_u32(BASE_RW_ADRESS, 0b001110_10100_00000_11111111_11110000);
     gekko.step().unwrap();
-    assert_eq!(gekko.register.get_gpr(20), 0xFFF0);
+    assert_eq!(gekko.register.get_gpr(20), 0xFFFFFFF0);
 }
 
 #[test]

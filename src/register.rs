@@ -1,3 +1,4 @@
+use crate::util::u16_get_section;
 use crate::BASE_RW_ADRESS;
 
 pub struct GekkoRegister {
@@ -115,6 +116,25 @@ impl Default for GekkoRegister {
             xer: 0,
             cr: [0; 8],
             ctr: 0,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Tbr {
+    Tbl,
+    Tbu,
+}
+
+impl Tbr {
+    #[inline]
+    pub fn decode_from_mftb(data: u16) -> Tbr {
+        println!("0b{:b}", data);
+        debug_assert_eq!(u16_get_section(data, 16 - 5, 5), 0b01000);
+        match data >> 5 {
+            0b01100 => Tbr::Tbl,
+            0b01101 => Tbr::Tbu,
+            _ => panic!(),
         }
     }
 }

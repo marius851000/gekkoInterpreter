@@ -1,6 +1,7 @@
 use crate::util::{make_rotation_mask, u8_get_bit};
 use crate::GekkoRegister;
 use crate::Instruction;
+use crate::Tbr;
 use crate::BASE_RW_ADRESS;
 use std::mem::replace;
 
@@ -13,6 +14,7 @@ pub enum BreakData {
 pub struct GekkoInterpreter {
     pub ram: Vec<u8>,
     pub register: GekkoRegister,
+    pub counter: u64,
 }
 
 impl GekkoInterpreter {
@@ -20,7 +22,12 @@ impl GekkoInterpreter {
         GekkoInterpreter {
             ram: vec![0; ram_amount],
             register: GekkoRegister::default(),
+            counter: 0,
         }
+    }
+
+    pub fn get_timebase(&self) -> u64 {
+        self.counter
     }
 
     pub fn replace_memory(&mut self, new_ram: Vec<u8>) -> Vec<u8> {
@@ -33,15 +40,11 @@ impl GekkoInterpreter {
     }
 
     pub fn step(&mut self) -> Result<BreakData, String> {
-
-
-
-
-
+        self.counter += 1;
         // first, get the instruction
         println!("----");
         println!("pc: 0x{:x}", self.register.pc);
-        println!("inst: 0x{:x}", self.read_u32(self.register.pc));
+        //println!("inst: 0x{:x}", self.read_u32(self.register.pc));
         let instruction = Instruction::decode_instruction(self.read_u32(self.register.pc)).unwrap();
         // second, run it
         let mut break_data = BreakData::None;
@@ -293,6 +296,16 @@ impl GekkoInterpreter {
                 self.register.set_gpr(gpr_d, d);
                 self.register.set_carry(overflow);
                 self.register.update_cr0(self.register.get_gpr(gpr_d));
+                self.register.increment_pc();
+            }
+            Instruction::Mftb(gpr_d, tbr) => {
+                self.register.set_gpr(
+                    gpr_d,
+                    match tbr {
+                        Tbr::Tbl => (self.get_timebase() >> 32) as u32,
+                        Tbr::Tbu => (self.get_timebase() << 32 >> 32) as u32,
+                    },
+                );
                 self.register.increment_pc();
             }
             Instruction::CustomBreak => {

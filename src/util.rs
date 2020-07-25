@@ -4,6 +4,11 @@ pub fn get_bit_section(data: u32, start: usize, len: usize) -> u32 {
 }
 
 #[inline]
+pub fn u16_get_section(data: u16, start: usize, len: usize) -> u16 {
+    (data << start) >> (16 - len)
+}
+
+#[inline]
 pub fn get_bit_value(data: u32, position: usize) -> bool {
     (data >> (31 - position)) & 1 == 1
 }

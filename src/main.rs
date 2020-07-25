@@ -38,6 +38,15 @@ pub fn main() {
 
     let mut gekko = GekkoInterpreter::new(4);
     gekko.replace_memory(vec);
+
+    let instruction_to_blr = [
+        0x8029ee88, //OSDisableInterrupts
+    ];
+
+    for offset in instruction_to_blr.iter() {
+        gekko.write_u32(*offset, 0x4e800020);
+    }
+
     if false {
         gekko.register.set_gpr(1, 0x805a5420);
         gekko.register.set_gpr(13, 0x8058edc0);

@@ -1,5 +1,5 @@
 use crate::util::{extend_sign_16, extend_sign_32, get_bit_section, get_bit_value};
-use crate::Spr;
+use crate::{Spr, Tbr};
 
 #[derive(Debug, PartialEq)]
 pub enum Instruction {
@@ -29,6 +29,7 @@ pub enum Instruction {
     Cmpl(u8, u8, u8),                  //crfD, rA, rB
     Nor(u8, u8, u8, bool),             //rS, rA, rB, Rc
     Addicdot(u8, u8, i16),             //rD, rA, simm
+    Mftb(u8, Tbr),                     //rD, tbr
     CustomBreak,
 }
 
@@ -160,6 +161,14 @@ impl Instruction {
                         Instruction::Mfspr(
                             get_bit_section(opcode, 6, 5) as u8,
                             Spr::decode_from_mfspr(get_bit_section(opcode, 11, 10) as u16),
+                        )
+                    }
+                    371 => {
+                        debug_assert_eq!(get_bit_value(opcode, 31), false);
+                        debug_assert_eq!(get_bit_value(opcode, 21), false);
+                        Instruction::Mftb(
+                            get_bit_section(opcode, 6, 5) as u8,
+                            Tbr::decode_from_mftb(get_bit_section(opcode, 11, 10) as u16),
                         )
                     }
                     442 => {
