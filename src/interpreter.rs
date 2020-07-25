@@ -50,8 +50,12 @@ impl GekkoInterpreter {
         if self.log {
             println!("----");
             println!("pc: 0x{:x}", self.register.pc);
+            println!("opcode: 0x{:x}", self.read_u32(self.register.pc));
         };
         let instruction = Instruction::decode_instruction(self.read_u32(self.register.pc)).unwrap();
+        if self.log {
+            println!("{:?}", instruction);
+        }
         // second, run it
         let mut break_data = BreakData::None;
         match instruction {
@@ -223,6 +227,12 @@ impl GekkoInterpreter {
                 self.write_u8(address, self.register.get_gpr(gpr_s) as u8);
                 self.register.increment_pc();
             }
+            Instruction::Stbu(gpr_s, gpr_a, d) => {
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
+                self.write_u8(address, self.register.get_gpr(gpr_s) as u8);
+                self.register.set_gpr(gpr_a, address);
+                self.register.increment_pc();
+            }
             Instruction::Addis(gpr_d, gpr_a, simm) => {
                 self.register.set_gpr(
                     gpr_d,
@@ -385,8 +395,8 @@ impl GekkoInterpreter {
             Instruction::Subfx(gpr_d, gpr_a, gpr_b, oe, rc) => {
                 let (result, overflow) = self
                     .register
-                    .get_gpr(gpr_a)
-                    .overflowing_sub(self.register.get_gpr(gpr_b));
+                    .get_gpr(gpr_b)
+                    .overflowing_sub(self.register.get_gpr(gpr_a));
                 self.register.set_gpr(gpr_d, result);
                 if oe {
                     self.register.setxer_ov_so(overflow);
@@ -397,7 +407,11 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Crxor(crb_d, crb_a, crb_b) => {
-                self.register.set_bit_cr(crb_d as usize, self.register.get_bit_cr(crb_a as usize) ^ self.register.get_bit_cr(crb_b as usize));
+                self.register.set_bit_cr(
+                    crb_d as usize,
+                    self.register.get_bit_cr(crb_a as usize)
+                        ^ self.register.get_bit_cr(crb_b as usize),
+                );
                 self.register.increment_pc();
             }
             Instruction::CustomBreak => {

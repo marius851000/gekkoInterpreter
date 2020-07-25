@@ -16,6 +16,7 @@ pub enum Instruction {
     Rlwinmx(u8, u8, u8, u8, u8, bool), //rS, rA, SH, MB, ME, Rc
     Lwz(u8, u8, i16),                  //rD, rA, d
     Stb(u8, u8, i16),                  //rS, rA, d
+    Stbu(u8, u8, i16),                 //rS, rA, d
     Addis(u8, u8, u16),                //rD, rA, SIMM
     Addi(u8, u8, i16),                 //rD, rA, SIMM
     Bx(i32, bool, bool),               //LI, AA, LK
@@ -36,8 +37,8 @@ pub enum Instruction {
     Lhz(u8, u8, i16),                  //rD, rA, d
     Andidot(u8, u8, u16),              //rD, rA, d
     Subfx(u8, u8, u8, bool, bool),     //rD, rA, rB, OE, Rc
-    Crxor(u8, u8, u8), //crbD, crbA, crbB
-    Lbzu(u8, u8, i16), //rD, rA, d
+    Crxor(u8, u8, u8),                 //crbD, crbA, crbB
+    Lbzu(u8, u8, i16),                 //rD, rA, d
     CustomBreak,
 }
 
@@ -277,6 +278,11 @@ impl Instruction {
                 get_bit_section(opcode, 16, 16) as i16,
             ),
             38 => Instruction::Stb(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                get_bit_section(opcode, 16, 16) as i16,
+            ),
+            39 => Instruction::Stbu(
                 get_bit_section(opcode, 6, 5) as u8,
                 get_bit_section(opcode, 11, 5) as u8,
                 get_bit_section(opcode, 16, 16) as i16,
