@@ -476,6 +476,13 @@ impl GekkoInterpreter {
                 self.register.set_fpr_both(fr_d, new_value);
                 self.register.increment_pc();
             }
+            Instruction::Stfdu(fr_s, gpr_a, d) => {
+                let address = (self.register.get_gpr(gpr_a) as i64 + (d as i64)) as u32;
+                let value_to_store = self.register.get_fpr_ps0(fr_s).to_bits();
+                self.write_u64(address, value_to_store);
+                self.register.set_gpr(gpr_a, address);
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
@@ -512,6 +519,15 @@ impl GekkoInterpreter {
 
     #[inline]
     pub fn write_u32(&mut self, mut offset: u32, data: u32) {
+        offset -= BASE_RW_ADRESS;
+        for d in &data.to_be_bytes() {
+            self.ram[offset as usize] = *d;
+            offset += 1;
+        }
+    }
+
+    #[inline]
+    pub fn write_u64(&mut self, mut offset: u32, data: u64) {
         offset -= BASE_RW_ADRESS;
         for d in &data.to_be_bytes() {
             self.ram[offset as usize] = *d;

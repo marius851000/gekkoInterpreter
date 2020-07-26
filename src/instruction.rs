@@ -45,7 +45,8 @@ pub enum Instruction {
     Fnmsubx(u8, u8, u8, u8, bool),     //frD, frA, frB, frC, Rc
     Frspx(u8, u8, bool),               //frD, frB, Rc
     Stfs(u8, u8, i16),                 //frD, rA, d
-    Lfs(u8, u8, i16),
+    Lfs(u8, u8, i16),                  //frD, rA, d
+    Stfdu(u8, u8, i16),                //frS, rA, d
     CustomBreak,
 }
 
@@ -320,6 +321,11 @@ impl Instruction {
                 get_bit_section(opcode, 16, 16) as i16,
             ),
             52 => Instruction::Stfs(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                get_bit_section(opcode, 16, 16) as i16,
+            ),
+            55 => Instruction::Stfdu(
                 get_bit_section(opcode, 6, 5) as u8,
                 get_bit_section(opcode, 11, 5) as u8,
                 get_bit_section(opcode, 16, 16) as i16,
