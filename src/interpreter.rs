@@ -419,9 +419,8 @@ impl GekkoInterpreter {
             }
             Instruction::Lfd(fr_d, gpr_a, d) => {
                 let address = self.register.compute_address_based_on_register(gpr_a, d);
-                let value = self.read_u64_le(address);
+                let value = self.read_u64(address);
                 self.register.set_fpr_u64(fr_d, value);
-                println!("or {}", self.register.get_fpr_f64(fr_d));
                 self.register.increment_pc();
             }
             Instruction::Frsqrtex(fr_d, fr_b, rc) => {
@@ -433,6 +432,15 @@ impl GekkoInterpreter {
 
                 if rc {
                     self.register.update_cr1_f64(new_value);
+                }
+                self.register.increment_pc();
+            }
+            Instruction::Fmulx(fr_d, fr_a, fr_c, rc) => {
+                let result = self.register.get_fpr_f64(fr_a) * self.register.get_fpr_f64(fr_c);
+                self.register.set_fpr_f64(fr_d, result);
+
+                if rc {
+                    self.register.update_cr1_f64(result);
                 }
                 self.register.increment_pc();
             }
@@ -496,14 +504,14 @@ impl GekkoInterpreter {
     }
 
     #[inline]
-    pub fn read_u64_le(&mut self, mut offset: u32) -> u64 {
+    pub fn read_u64(&mut self, mut offset: u32) -> u64 {
         offset -= BASE_RW_ADRESS;
         let mut buffer = [0; 8];
         for d in &mut buffer {
             *d = self.ram[offset as usize];
             offset += 1;
         }
-        u64::from_le_bytes(buffer)
+        u64::from_be_bytes(buffer)
     }
 
     #[inline]

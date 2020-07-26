@@ -41,6 +41,7 @@ pub enum Instruction {
     Lbzu(u8, u8, i16),                 //rD, rA, d
     Lfd(u8, u8, i16),                  //frD, rA, d
     Frsqrtex(u8, u8, bool),            //frD, frB, Rc
+    Fmulx(u8, u8, u8, bool),            //frD, frA, frC, Rc
     CustomBreak,
 }
 
@@ -320,6 +321,15 @@ impl Instruction {
             63 => {
                 let upper_extended_opcode = get_bit_section(opcode, 26, 5);
                 match upper_extended_opcode {
+                    25 => {
+                        debug_assert_eq!(get_bit_section(opcode, 16, 5), 0);
+                        Instruction::Fmulx(
+                            get_bit_section(opcode, 6, 5) as u8,
+                            get_bit_section(opcode, 11, 5) as u8,
+                            get_bit_section(opcode, 21, 5) as u8,
+                            get_bit_value(opcode, 31),
+                        )
+                    }
                     26 => {
                         debug_assert_eq!(get_bit_section(opcode, 11, 5), 0);
                         debug_assert_eq!(get_bit_section(opcode, 21, 5), 0);

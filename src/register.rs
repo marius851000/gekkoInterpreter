@@ -52,9 +52,10 @@ impl GekkoRegister {
     #[inline]
     pub fn set_fpr_f64(&mut self, nb: u8, data: f64) {
         println!(
-            "set fpr {} to 0x{:x}u64",
+            "set fpr {} to 0x{:x}u64 ({}f64)",
             nb,
-            u64::from_ne_bytes(data.to_ne_bytes())
+            u64::from_ne_bytes(data.to_ne_bytes()),
+            data
         );
         self.fpr[nb as usize] = u64::from_ne_bytes(data.to_ne_bytes());
     }
@@ -63,11 +64,12 @@ impl GekkoRegister {
     pub fn set_fpr_u64(&mut self, nb: u8, data: u64) {
         println!("set fpr {} to 0x{:x}u64", nb, data);
         self.fpr[nb as usize] = data;
+        println!("(or {})", self.get_fpr_f64(nb));
     }
 
     #[inline]
     pub fn get_fpr_f64(&self, nb: u8) -> f64 {
-        f64::from_be_bytes(self.fpr[nb as usize].to_ne_bytes())
+        f64::from_ne_bytes(self.fpr[nb as usize].to_ne_bytes())
     }
 
     #[inline]
