@@ -54,14 +54,21 @@ impl GekkoRegister {
 
     #[inline]
     pub fn set_fpr_ps0(&mut self, nb: u8, value: f64) {
-        println!("set ps0 of {} to {}", nb, value);
+        println!("set ps0 of fpr {} to {}", nb, value);
         self.fpr[nb as usize][0] = value
     }
 
     #[inline]
     pub fn set_fpr_ps1(&mut self, nb: u8, value: f64) {
-        println!("set ps1 of {} to {}", nb, value);
+        println!("set ps1 of fpr {} to {}", nb, value);
         self.fpr[nb as usize][1] = value
+    }
+
+    #[inline]
+    pub fn set_fpr_both(&mut self, nb: u8, value: f64) {
+        println!("set ps0 and ps1 of fpr {} to {}", nb, value);
+        self.fpr[nb as usize][0] = value;
+        self.fpr[nb as usize][1] = value;
     }
 
     #[inline]

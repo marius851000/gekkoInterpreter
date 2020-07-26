@@ -470,6 +470,12 @@ impl GekkoInterpreter {
                 self.write_u32(address, value_to_write);
                 self.register.increment_pc();
             }
+            Instruction::Lfs(fr_d, gpr_a, d) => {
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
+                let new_value = f32::from_bits(self.read_u32(address)) as f64;
+                self.register.set_fpr_both(fr_d, new_value);
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
