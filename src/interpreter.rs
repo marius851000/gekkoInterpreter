@@ -444,6 +444,18 @@ impl GekkoInterpreter {
                 }
                 self.register.increment_pc();
             }
+            Instruction::Fnmsubx(fr_d, fr_a, fr_b, fr_c, rc) => {
+                let value_a = self.register.get_fpr_f64(fr_a);
+                let value_b = self.register.get_fpr_f64(fr_b);
+                let value_c = self.register.get_fpr_f64(fr_c);
+                let result = -((value_a * value_c) - value_b);
+                self.register.set_fpr_f64(fr_d, result);
+
+                if rc {
+                    self.register.update_cr1_f64(result);
+                }
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
