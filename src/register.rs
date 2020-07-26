@@ -5,6 +5,8 @@ pub struct GekkoRegister {
     // general purpose register
     gpr: [u32; 32],
 
+    // fpr, can be accessed as a pair of f32
+    // in this case, ps0 is first and ps1 is second
     fpr: [u64; 32],
 
     // program counter (position of the cursor in the code)
@@ -68,8 +70,23 @@ impl GekkoRegister {
     }
 
     #[inline]
+    pub fn set_fpr_ps0_f32(&mut self, nb: u8, data: f32) {
+        let mut splited_value = self.get_fpr_u64(nb).to_ne_bytes();
+        let mut source_splited = data.to_ne_bytes();
+        for count in 0..4 {
+            splited_value[count] = source_splited[count]
+        }
+        self.set_fpr_u64(nb, u64::from_ne_bytes(splited_value));
+    }
+
+    #[inline]
     pub fn get_fpr_f64(&self, nb: u8) -> f64 {
         f64::from_ne_bytes(self.fpr[nb as usize].to_ne_bytes())
+    }
+
+    #[inline]
+    pub fn get_fpr_u64(&self, nb: u8) -> u64 {
+        self.fpr[nb as usize]
     }
 
     #[inline]
@@ -97,6 +114,11 @@ impl GekkoRegister {
 
     #[inline]
     pub fn update_cr1_f64(&mut self, _value: f64) {
+        todo!("update_cr1 is not yet implemented");
+    }
+
+    #[inline]
+    pub fn update_cr1_f32(&mut self, _value: f32) {
         todo!("update_cr1 is not yet implemented");
     }
 

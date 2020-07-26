@@ -456,6 +456,14 @@ impl GekkoInterpreter {
                 }
                 self.register.increment_pc();
             }
+            Instruction::Frspx(fr_d, fr_b, rc) => {
+                let value_source = self.register.get_fpr_f64(fr_b) as f32;
+                self.register.set_fpr_ps0_f32(fr_d, value_source);
+                if rc {
+                    self.register.update_cr1_f32(value_source);
+                };
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
