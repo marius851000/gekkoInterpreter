@@ -483,6 +483,12 @@ impl GekkoInterpreter {
                 self.register.set_gpr(gpr_a, address);
                 self.register.increment_pc();
             }
+            Instruction::Stfd(fr_s, gpr_a, d) => {
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
+                let value_to_store = self.register.get_fpr_ps0(fr_s).to_bits();
+                self.write_u64(address, value_to_store);
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
