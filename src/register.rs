@@ -7,7 +7,8 @@ pub struct GekkoRegister {
 
     // fpr, can be accessed as a pair of f32
     // in this case, ps0 is first and ps1 is second
-    fpr: [u64; 32],
+    // (didn't really understood how this really work. Let just copy dolphin on how this is stored)
+    fpr: [[f64; 2]; 32],
 
     // program counter (position of the cursor in the code)
     pub pc: u32,
@@ -27,7 +28,7 @@ impl Default for GekkoRegister {
     fn default() -> Self {
         Self {
             gpr: [0; 32],
-            fpr: [0; 32],
+            fpr: [[0.0; 2]; 32],
             pc: BASE_RW_ADRESS,
             lr: 0,
             xer: 0,
@@ -52,41 +53,25 @@ impl GekkoRegister {
     }
 
     #[inline]
-    pub fn set_fpr_f64(&mut self, nb: u8, data: f64) {
-        println!(
-            "set fpr {} to 0x{:x}u64 ({}f64)",
-            nb,
-            u64::from_ne_bytes(data.to_ne_bytes()),
-            data
-        );
-        self.fpr[nb as usize] = u64::from_ne_bytes(data.to_ne_bytes());
+    pub fn set_fpr_ps0(&mut self, nb: u8, value: f64) {
+        println!("set ps0 of {} to {}", nb, value);
+        self.fpr[nb as usize][0] = value
     }
 
     #[inline]
-    pub fn set_fpr_u64(&mut self, nb: u8, data: u64) {
-        println!("set fpr {} to 0x{:x}u64", nb, data);
-        self.fpr[nb as usize] = data;
-        println!("(or {})", self.get_fpr_f64(nb));
+    pub fn set_fpr_ps1(&mut self, nb: u8, value: f64) {
+        println!("set ps1 of {} to {}", nb, value);
+        self.fpr[nb as usize][1] = value
     }
 
     #[inline]
-    pub fn set_fpr_ps0_f32(&mut self, nb: u8, data: f32) {
-        let mut splited_value = self.get_fpr_u64(nb).to_ne_bytes();
-        let mut source_splited = data.to_ne_bytes();
-        for count in 0..4 {
-            splited_value[count] = source_splited[count]
-        }
-        self.set_fpr_u64(nb, u64::from_ne_bytes(splited_value));
+    pub fn get_fpr_ps0(&mut self, nb: u8) -> f64 {
+        self.fpr[nb as usize][0]
     }
 
     #[inline]
-    pub fn get_fpr_f64(&self, nb: u8) -> f64 {
-        f64::from_ne_bytes(self.fpr[nb as usize].to_ne_bytes())
-    }
-
-    #[inline]
-    pub fn get_fpr_u64(&self, nb: u8) -> u64 {
-        self.fpr[nb as usize]
+    pub fn get_fpr_ps1(&mut self, nb: u8) -> f64 {
+        self.fpr[nb as usize][1]
     }
 
     #[inline]

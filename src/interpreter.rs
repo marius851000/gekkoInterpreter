@@ -1,4 +1,4 @@
-use crate::util::{make_rotation_mask, u8_get_bit};
+use crate::util::{make_rotation_mask, raw_u64_to_f64, u8_get_bit};
 use crate::GekkoRegister;
 use crate::Instruction;
 use crate::Tbr;
@@ -419,14 +419,14 @@ impl GekkoInterpreter {
             }
             Instruction::Lfd(fr_d, gpr_a, d) => {
                 let address = self.register.compute_address_based_on_register(gpr_a, d);
-                let value = self.read_u64(address);
-                self.register.set_fpr_u64(fr_d, value);
+                let value = raw_u64_to_f64(self.read_u64(address));
+                self.register.set_fpr_ps0(fr_d, value);
                 self.register.increment_pc();
             }
             Instruction::Frsqrtex(fr_d, fr_b, rc) => {
-                let input_b = self.register.get_fpr_f64(fr_b);
+                let input_b = self.register.get_fpr_ps0(fr_b);
                 let new_value = 1.0 / input_b.sqrt();
-                self.register.set_fpr_f64(fr_d, new_value);
+                self.register.set_fpr_ps0(fr_d, new_value);
 
                 //remember: no exception handling will be implemented
 
@@ -436,8 +436,8 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Fmulx(fr_d, fr_a, fr_c, rc) => {
-                let result = self.register.get_fpr_f64(fr_a) * self.register.get_fpr_f64(fr_c);
-                self.register.set_fpr_f64(fr_d, result);
+                let result = self.register.get_fpr_ps0(fr_a) * self.register.get_fpr_ps0(fr_c);
+                self.register.set_fpr_ps0(fr_d, result);
 
                 if rc {
                     self.register.update_cr1_f64(result);
@@ -445,11 +445,11 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Fnmsubx(fr_d, fr_a, fr_b, fr_c, rc) => {
-                let value_a = self.register.get_fpr_f64(fr_a);
-                let value_b = self.register.get_fpr_f64(fr_b);
-                let value_c = self.register.get_fpr_f64(fr_c);
+                let value_a = self.register.get_fpr_ps0(fr_a);
+                let value_b = self.register.get_fpr_ps0(fr_b);
+                let value_c = self.register.get_fpr_ps0(fr_c);
                 let result = -((value_a * value_c) - value_b);
-                self.register.set_fpr_f64(fr_d, result);
+                self.register.set_fpr_ps0(fr_d, result);
 
                 if rc {
                     self.register.update_cr1_f64(result);
@@ -457,11 +457,17 @@ impl GekkoInterpreter {
                 self.register.increment_pc();
             }
             Instruction::Frspx(fr_d, fr_b, rc) => {
-                let value_source = self.register.get_fpr_f64(fr_b) as f32;
-                self.register.set_fpr_ps0_f32(fr_d, value_source);
+                let value_source = self.register.get_fpr_ps0(fr_b) as f32;
+                self.register.set_fpr_ps0(fr_d, value_source as f64);
                 if rc {
                     self.register.update_cr1_f32(value_source);
                 };
+                self.register.increment_pc();
+            }
+            Instruction::Stfs(fr_s, gpr_a, d) => {
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
+                let value_to_write = (self.register.get_fpr_ps0(fr_s) as f32).to_bits();
+                self.write_u32(address, value_to_write);
                 self.register.increment_pc();
             }
             Instruction::CustomBreak => {

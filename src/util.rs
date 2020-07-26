@@ -53,6 +53,11 @@ pub fn make_rotation_mask(mb: u32, me: u32) -> u32 {
     }
 }
 
+#[inline]
+pub fn raw_u64_to_f64(value: u64) -> f64 {
+    f64::from_ne_bytes(value.to_ne_bytes())
+}
+
 #[test]
 fn test_get_bit() {
     assert_eq!(
