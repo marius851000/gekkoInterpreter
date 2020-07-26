@@ -5,6 +5,8 @@ pub struct GekkoRegister {
     // general purpose register
     gpr: [u32; 32],
 
+    fpr: [u64; 32],
+
     // program counter (position of the cursor in the code)
     pub pc: u32,
 
@@ -17,6 +19,20 @@ pub struct GekkoRegister {
     pub cr: [u8; 8],
 
     pub ctr: u32,
+}
+
+impl Default for GekkoRegister {
+    fn default() -> Self {
+        Self {
+            gpr: [0; 32],
+            fpr: [0; 32],
+            pc: BASE_RW_ADRESS,
+            lr: 0,
+            xer: 0,
+            cr: [0; 8],
+            ctr: 0,
+        }
+    }
 }
 
 impl GekkoRegister {
@@ -32,6 +48,28 @@ impl GekkoRegister {
         //println!("wrote 0x{:x} to gpr {}", data, nb);
         self.gpr[nb as usize] = data;
     }
+
+    #[inline]
+    pub fn set_fpr_f64(&mut self, nb: u8, data: f64) {
+        println!(
+            "set fpr {} to 0x{:x}u64",
+            nb,
+            u64::from_ne_bytes(data.to_ne_bytes())
+        );
+        self.fpr[nb as usize] = u64::from_ne_bytes(data.to_ne_bytes());
+    }
+
+    #[inline]
+    pub fn set_fpr_u64(&mut self, nb: u8, data: u64) {
+        println!("set fpr {} to 0x{:x}u64", nb, data);
+        self.fpr[nb as usize] = data;
+    }
+
+    #[inline]
+    pub fn get_fpr_f64(&self, nb: u8) -> f64 {
+        f64::from_be_bytes(self.fpr[nb as usize].to_ne_bytes())
+    }
+
     #[inline]
     pub fn setxer_ov_so(&mut self, value: bool) {
         self.xer = (self.xer & 0xBFFFFFFF) | ((value as u32) << 30);
@@ -53,6 +91,11 @@ impl GekkoRegister {
         } else {
             0x2
         } | (self.get_xer_so() as u8);
+    }
+
+    #[inline]
+    pub fn update_cr1_f64(&mut self, _value: f64) {
+        todo!("update_cr1 is not yet implemented");
     }
 
     #[inline]
@@ -118,19 +161,6 @@ impl GekkoRegister {
     #[inline]
     pub fn get_carry(&self) -> bool {
         (self.xer & (1 << 29)) != 0
-    }
-}
-
-impl Default for GekkoRegister {
-    fn default() -> Self {
-        Self {
-            gpr: [0; 32],
-            pc: BASE_RW_ADRESS,
-            lr: 0,
-            xer: 0,
-            cr: [0; 8],
-            ctr: 0,
-        }
     }
 }
 

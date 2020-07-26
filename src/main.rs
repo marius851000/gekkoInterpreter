@@ -50,11 +50,23 @@ pub fn main() {
         0x802999a8, //PPCMtpmc4
         0x80299a10, //PPCDisableSpeculation
         0x80299a38, //PPCSetFpNonIEEEMode
-                    //0x80299cb8, //OSInit, tmp
+        0x80299cb8, //OSInit, tmp
     ];
 
     for offset in instruction_to_blr.iter() {
         gekko.write_u32(*offset, 0x4e800020);
+    }
+
+    let instruction_to_nop = [
+        0x8029b760, //dataCacheBlockFlush
+        0x8029a220, //sync
+        0x8029b7b8, //icbi
+        0x8029b7c4, //sync
+        0x8029b7c8, //isync
+    ];
+
+    for offset in instruction_to_nop.iter() {
+        gekko.write_u32(*offset, 0x60000000);
     }
 
     if false {

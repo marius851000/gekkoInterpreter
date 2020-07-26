@@ -39,6 +39,8 @@ pub enum Instruction {
     Subfx(u8, u8, u8, bool, bool),     //rD, rA, rB, OE, Rc
     Crxor(u8, u8, u8),                 //crbD, crbA, crbB
     Lbzu(u8, u8, i16),                 //rD, rA, d
+    Lfd(u8, u8, i16),                  //frD, rA, d
+    Frsqrtex(u8, u8, bool),            //frD, frB, Rc
     CustomBreak,
 }
 
@@ -302,11 +304,31 @@ impl Instruction {
                 get_bit_section(opcode, 11, 5) as u8,
                 get_bit_section(opcode, 16, 16) as i16,
             ),
-            0b111011 => {
+            50 => Instruction::Lfd(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                get_bit_section(opcode, 16, 16) as i16,
+            ),
+            59 => {
                 let extended_opcode = get_bit_section(opcode, 26, 5);
                 match extended_opcode {
                     // custom instruction
                     0b00000 => Instruction::CustomBreak,
+                    _ => return None,
+                }
+            }
+            63 => {
+                let upper_extended_opcode = get_bit_section(opcode, 26, 5);
+                match upper_extended_opcode {
+                    26 => {
+                        debug_assert_eq!(get_bit_section(opcode, 11, 5), 0);
+                        debug_assert_eq!(get_bit_section(opcode, 21, 5), 0);
+                        Instruction::Frsqrtex(
+                            get_bit_section(opcode, 6, 5) as u8,
+                            get_bit_section(opcode, 16, 5) as u8,
+                            get_bit_value(opcode, 31),
+                        )
+                    }
                     _ => return None,
                 }
             }
