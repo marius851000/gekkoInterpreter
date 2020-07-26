@@ -15,6 +15,7 @@ pub enum Instruction {
     Bcx(u8, u8, i16, bool, bool),      //BO, BI, BD, AA, LK
     Rlwinmx(u8, u8, u8, u8, u8, bool), //rS, rA, SH, MB, ME, Rc
     Lwz(u8, u8, i16),                  //rD, rA, d
+    Lwzu(u8, u8, i16),                  //rD, rA, d
     Stb(u8, u8, i16),                  //rS, rA, d
     Stbu(u8, u8, i16),                 //rS, rA, d
     Addis(u8, u8, u16),                //rD, rA, SIMM
@@ -262,6 +263,11 @@ impl Instruction {
                 }
             }
             32 => Instruction::Lwz(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                get_bit_section(opcode, 16, 16) as i16,
+            ),
+            33 => Instruction::Lwzu(
                 get_bit_section(opcode, 6, 5) as u8,
                 get_bit_section(opcode, 11, 5) as u8,
                 get_bit_section(opcode, 16, 16) as i16,

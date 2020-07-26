@@ -225,6 +225,13 @@ impl GekkoInterpreter {
                 self.register.set_gpr(gpr_d, new_value);
                 self.register.increment_pc();
             }
+            Instruction::Lwzu(gpr_d, gpr_a, d) => {
+                let address = (self.register.get_gpr(gpr_a) as i64 + (d as i64)) as u32;
+                let new_value = self.read_u32(address);
+                self.register.set_gpr(gpr_d, new_value);
+                self.register.set_gpr(gpr_a, address);
+                self.register.increment_pc();
+            }
             Instruction::Stb(gpr_s, gpr_a, d) => {
                 let address = self.register.compute_address_based_on_register(gpr_a, d);
                 self.write_u8(address, self.register.get_gpr(gpr_s) as u8);
