@@ -1,4 +1,4 @@
-use crate::util::{make_rotation_mask, raw_u64_to_f64, u8_get_bit};
+use crate::util::{make_rotation_mask, raw_u64_to_f64, u8_get_bit, get_bit_section};
 use crate::GekkoRegister;
 use crate::Instruction;
 use crate::Tbr;
@@ -496,12 +496,49 @@ impl GekkoInterpreter {
                 self.write_u64(address, value_to_store);
                 self.register.increment_pc();
             }
+            Instruction::Psq_st(fr_s, gpr_a, w, i, d) => {
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
+                let qr = self.register.get_qr(i);
+                let stt = get_bit_section(qr, 29, 3) as u8;
+                let sts = get_bit_section(qr, 18, 6) as u8;
+                let c = match stt {
+                    4 | 6 => 10,
+                    5 | 7 => 20,
+                    _ => 4,
+                };
+                if !w { // w == 0, to keep the order in the documentation
+                    let fpr_0 = self.register.get_fpr_ps0(fr_s);
+                    self.quantize_and_store(fpr_0, stt, sts, address);
+                    let fpr_1 = self.register.get_fpr_ps1(fr_s);
+                    self.quantize_and_store(fpr_1, stt, sts, address + c);
+                } else {
+                    todo!("psq_st for just one float");
+                }
+                self.register.increment_pc();
+            }
             Instruction::CustomBreak => {
                 break_data = BreakData::Break;
                 self.register.increment_pc();
             }
         };
         Ok(break_data)
+    }
+
+    fn quantize_and_store(&mut self, fpr: f64, st_type: u8, st_scale: u8, address: u32) {
+        match st_type {
+            0 => {
+                // no scaling
+                self.write_u32(
+                    address,
+                    u32::from_ne_bytes((fpr as f32).to_ne_bytes())
+                );
+            }
+            4 => todo!("quantize_and_store for type 4"),
+            5 => todo!("quantize_and_store for type 5"),
+            6 => todo!("quantize_and_store for type 6"),
+            7 => todo!("quantize_and_store for type 7"),
+            _ => panic!("invalid value for st_type in quantize_and_store: {}", st_type),
+        }
     }
 
     fn check_and_apply_conditional_jump(&mut self, bo: u8, bi: u8) -> (bool, bool) {

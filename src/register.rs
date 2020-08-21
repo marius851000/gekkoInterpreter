@@ -22,6 +22,9 @@ pub struct GekkoRegister {
     pub cr: [u8; 8],
 
     pub ctr: u32,
+
+    // graphical quantification register
+    pub qr: [u32; 8],
 }
 
 impl Default for GekkoRegister {
@@ -34,6 +37,7 @@ impl Default for GekkoRegister {
             xer: 0,
             cr: [0; 8],
             ctr: 0,
+            qr: [0; 8],
         }
     }
 }
@@ -177,6 +181,11 @@ impl GekkoRegister {
     #[inline]
     pub fn get_carry(&self) -> bool {
         (self.xer & (1 << 29)) != 0
+    }
+
+    #[inline]
+    pub fn get_qr(&self, id: u8) -> u32 {
+        self.qr[id as usize]
     }
 }
 

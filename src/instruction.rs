@@ -2,6 +2,7 @@ use crate::util::{extend_sign_16, extend_sign_32, get_bit_section, get_bit_value
 use crate::{Spr, Tbr};
 
 #[derive(Debug, PartialEq)]
+#[allow(non_camel_case_types)]
 pub enum Instruction {
     Addx(u8, u8, u8, bool, bool),      //rD, rA, rB, OE, Rc
     Stwu(u8, u8, i16),                 //rS, rA, d
@@ -49,6 +50,7 @@ pub enum Instruction {
     Lfs(u8, u8, i16),                  //frD, rA, d
     Stfdu(u8, u8, i16),                //frS, rA, d
     Stfd(u8, u8, i16),                 //frS, rA, d
+    Psq_st(u8, u8, bool, u8, i16), //frS, rA, W, I, d
     CustomBreak,
 }
 
@@ -349,6 +351,15 @@ impl Instruction {
                     0b00000 => Instruction::CustomBreak,
                     _ => return None,
                 }
+            }
+            60 => {
+                Instruction::Psq_st(
+                    get_bit_section(opcode, 6, 5) as u8,
+                    get_bit_section(opcode, 11, 5) as u8,
+                    get_bit_value(opcode, 16),
+                    get_bit_section(opcode, 17, 3) as u8,
+                    extend_sign_32(get_bit_section(opcode, 20, 12), 12) as i16,
+                )
             }
             63 => {
                 let upper_extended_opcode = get_bit_section(opcode, 26, 5);
