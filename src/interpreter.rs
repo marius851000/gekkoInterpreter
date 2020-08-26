@@ -1,4 +1,6 @@
-use crate::util::{make_rotation_mask, raw_u64_to_f64, u8_get_bit, get_bit_section, get_size_for_quantized_type};
+use crate::util::{
+    get_bit_section, get_size_for_quantized_type, make_rotation_mask, raw_u64_to_f64, u8_get_bit,
+};
 use crate::GekkoRegister;
 use crate::Instruction;
 use crate::Tbr;
@@ -502,7 +504,8 @@ impl GekkoInterpreter {
                 let stt = get_bit_section(qr, 29, 3) as u8;
                 let sts = get_bit_section(qr, 18, 6) as u8;
                 let c = get_size_for_quantized_type(stt);
-                if !w { // w == 0, to keep the order in the documentation
+                if !w {
+                    // w == 0, to keep the order in the documentation
                     let fpr_0 = self.register.get_fpr_ps0(fr_s);
                     self.quantize_and_store(fpr_0, stt, sts, address);
                     let fpr_1 = self.register.get_fpr_ps1(fr_s);
@@ -521,7 +524,7 @@ impl GekkoInterpreter {
                 let fpr_0 = self.dequantize(address, lt, ls);
                 self.register.set_fpr_ps0(fr_s, fpr_0);
                 if !w {
-                    let fpr_1 = self.dequantize(address+c, lt, ls);
+                    let fpr_1 = self.dequantize(address + c, lt, ls);
                     self.register.set_fpr_ps1(fr_s, fpr_1);
                 } else {
                     self.register.set_fpr_ps1(fr_s, 1.0);
@@ -540,16 +543,16 @@ impl GekkoInterpreter {
         match st_type {
             0 => {
                 // no scaling
-                self.write_u32(
-                    address,
-                    u32::from_ne_bytes((fpr as f32).to_ne_bytes())
-                );
+                self.write_u32(address, u32::from_ne_bytes((fpr as f32).to_ne_bytes()));
             }
             4 => todo!("quantize_and_store for type 4"),
             5 => todo!("quantize_and_store for type 5"),
             6 => todo!("quantize_and_store for type 6"),
             7 => todo!("quantize_and_store for type 7"),
-            _ => panic!("invalid value for st_type in quantize_and_store: {}", st_type),
+            _ => panic!(
+                "invalid value for st_type in quantize_and_store: {}",
+                st_type
+            ),
         }
     }
 
@@ -557,13 +560,13 @@ impl GekkoInterpreter {
         match l_type {
             0 => {
                 let encoded_value = self.read_u32(address);
-                return f32::from_ne_bytes((encoded_value).to_ne_bytes()) as f64
+                f32::from_ne_bytes((encoded_value).to_ne_bytes()) as f64;
             }
             4 => todo!("dequantize type 4"),
             5 => todo!("dequantize type 5"),
             6 => todo!("dequantize type 6"),
             7 => todo!("dequantize type 7"),
-            _ => panic!("invalide value for l_type in dequantize: {}", l_type)
+            _ => panic!("invalide value for l_type in dequantize: {}", l_type),
         }
     }
 
