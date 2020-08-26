@@ -1,4 +1,4 @@
-use crate::util::{make_rotation_mask, raw_u64_to_f64, u8_get_bit, get_bit_section};
+use crate::util::{make_rotation_mask, raw_u64_to_f64, u8_get_bit, get_bit_section, get_size_for_quantized_type};
 use crate::GekkoRegister;
 use crate::Instruction;
 use crate::Tbr;
@@ -501,11 +501,7 @@ impl GekkoInterpreter {
                 let qr = self.register.get_qr(i);
                 let stt = get_bit_section(qr, 29, 3) as u8;
                 let sts = get_bit_section(qr, 18, 6) as u8;
-                let c = match stt {
-                    4 | 6 => 10,
-                    5 | 7 => 20,
-                    _ => 4,
-                };
+                let c = get_size_for_quantized_type(stt);
                 if !w { // w == 0, to keep the order in the documentation
                     let fpr_0 = self.register.get_fpr_ps0(fr_s);
                     self.quantize_and_store(fpr_0, stt, sts, address);
@@ -513,6 +509,22 @@ impl GekkoInterpreter {
                     self.quantize_and_store(fpr_1, stt, sts, address + c);
                 } else {
                     todo!("psq_st for just one float");
+                }
+                self.register.increment_pc();
+            }
+            Instruction::Psq_l(fr_s, gpr_a, w, i, d) => {
+                let address = self.register.compute_address_based_on_register(gpr_a, d);
+                let qr = self.register.get_qr(i);
+                let lt = get_bit_section(qr, 13, 3) as u8;
+                let ls = get_bit_section(qr, 2, 6) as u8;
+                let c = get_size_for_quantized_type(lt);
+                let fpr_0 = self.dequantize(address, lt, ls);
+                self.register.set_fpr_ps0(fr_s, fpr_0);
+                if !w {
+                    let fpr_1 = self.dequantize(address+c, lt, ls);
+                    self.register.set_fpr_ps1(fr_s, fpr_1);
+                } else {
+                    self.register.set_fpr_ps1(fr_s, 1.0);
                 }
                 self.register.increment_pc();
             }
@@ -524,7 +536,7 @@ impl GekkoInterpreter {
         Ok(break_data)
     }
 
-    fn quantize_and_store(&mut self, fpr: f64, st_type: u8, st_scale: u8, address: u32) {
+    fn quantize_and_store(&mut self, fpr: f64, st_type: u8, _st_scale: u8, address: u32) {
         match st_type {
             0 => {
                 // no scaling
@@ -538,6 +550,20 @@ impl GekkoInterpreter {
             6 => todo!("quantize_and_store for type 6"),
             7 => todo!("quantize_and_store for type 7"),
             _ => panic!("invalid value for st_type in quantize_and_store: {}", st_type),
+        }
+    }
+
+    fn dequantize(&self, address: u32, l_type: u8, _l_scale: u8) -> f64 {
+        match l_type {
+            0 => {
+                let encoded_value = self.read_u32(address);
+                return f32::from_ne_bytes((encoded_value).to_ne_bytes()) as f64
+            }
+            4 => todo!("dequantize type 4"),
+            5 => todo!("dequantize type 5"),
+            6 => todo!("dequantize type 6"),
+            7 => todo!("dequantize type 7"),
+            _ => panic!("invalide value for l_type in dequantize: {}", l_type)
         }
     }
 
@@ -591,7 +617,7 @@ impl GekkoInterpreter {
     }
 
     #[inline]
-    pub fn read_u32(&mut self, mut offset: u32) -> u32 {
+    pub fn read_u32(&self, mut offset: u32) -> u32 {
         offset -= BASE_RW_ADRESS;
         let mut buffer = [0; 4];
         for d in &mut buffer {
@@ -602,7 +628,7 @@ impl GekkoInterpreter {
     }
 
     #[inline]
-    pub fn read_u64(&mut self, mut offset: u32) -> u64 {
+    pub fn read_u64(&self, mut offset: u32) -> u64 {
         offset -= BASE_RW_ADRESS;
         let mut buffer = [0; 8];
         for d in &mut buffer {
@@ -613,7 +639,7 @@ impl GekkoInterpreter {
     }
 
     #[inline]
-    pub fn read_u16(&mut self, mut offset: u32) -> u16 {
+    pub fn read_u16(&self, mut offset: u32) -> u16 {
         offset -= BASE_RW_ADRESS;
         let v1 = self.ram[offset as usize];
         let v2 = self.ram[(offset as usize) + 1];
@@ -621,7 +647,7 @@ impl GekkoInterpreter {
     }
 
     #[inline]
-    pub fn read_u8(&mut self, offset: u32) -> u8 {
+    pub fn read_u8(&self, offset: u32) -> u8 {
         self.ram[(offset - BASE_RW_ADRESS) as usize]
     }
 }

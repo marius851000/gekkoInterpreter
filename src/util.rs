@@ -58,6 +58,15 @@ pub fn raw_u64_to_f64(value: u64) -> f64 {
     f64::from_ne_bytes(value.to_ne_bytes())
 }
 
+#[inline]
+pub fn get_size_for_quantized_type(size: u8) -> u32 {
+    match size {
+        4 | 6 => 10,
+        5 | 7 => 20,
+        _ => 4,
+    }
+}
+
 #[test]
 fn test_get_bit() {
     assert_eq!(

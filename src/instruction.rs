@@ -51,6 +51,7 @@ pub enum Instruction {
     Stfdu(u8, u8, i16),                //frS, rA, d
     Stfd(u8, u8, i16),                 //frS, rA, d
     Psq_st(u8, u8, bool, u8, i16), //frS, rA, W, I, d
+    Psq_l(u8, u8, bool, u8, i16), //frS, rA, W, I, d
     CustomBreak,
 }
 
@@ -344,6 +345,15 @@ impl Instruction {
                 get_bit_section(opcode, 11, 5) as u8,
                 get_bit_section(opcode, 16, 16) as i16,
             ),
+            56 => {
+                Instruction::Psq_l(
+                    get_bit_section(opcode, 6, 5) as u8,
+                    get_bit_section(opcode, 11, 5) as u8,
+                    get_bit_value(opcode, 16),
+                    get_bit_section(opcode, 17, 3) as u8,
+                    extend_sign_32(get_bit_section(opcode, 20, 12), 12) as i16,
+                )
+            }
             59 => {
                 let extended_opcode = get_bit_section(opcode, 26, 5);
                 match extended_opcode {
