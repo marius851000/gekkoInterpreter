@@ -52,6 +52,7 @@ pub enum Instruction {
     Stfd(u8, u8, i16),                 //frS, rA, d
     Psq_st(u8, u8, bool, u8, i16),     //frS, rA, W, I, d
     Psq_l(u8, u8, bool, u8, i16),      //frS, rA, W, I, d
+    Rlwimix(u8, u8, u8, u8, u8, bool), //rS, rA, SH, MB, ME, Rc
     CustomBreak,
 }
 
@@ -99,6 +100,11 @@ impl Instruction {
                 get_bit_value(opcode, 30),
                 get_bit_value(opcode, 31),
             ),
+            18 => Instruction::Bx(
+                extend_sign_32(get_bit_section(opcode, 6, 24), 24),
+                get_bit_value(opcode, 30),
+                get_bit_value(opcode, 31),
+            ),
             19 => {
                 let secondary_opcode = get_bit_section(opcode, 21, 10);
                 match secondary_opcode {
@@ -121,9 +127,12 @@ impl Instruction {
                     _ => return None,
                 }
             }
-            18 => Instruction::Bx(
-                extend_sign_32(get_bit_section(opcode, 6, 24), 24),
-                get_bit_value(opcode, 30),
+            20 => Instruction::Rlwimix(
+                get_bit_section(opcode, 6, 5) as u8,
+                get_bit_section(opcode, 11, 5) as u8,
+                get_bit_section(opcode, 16, 5) as u8,
+                get_bit_section(opcode, 21, 5) as u8,
+                get_bit_section(opcode, 26, 5) as u8,
                 get_bit_value(opcode, 31),
             ),
             21 => Instruction::Rlwinmx(

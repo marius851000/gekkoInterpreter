@@ -221,6 +221,18 @@ impl GekkoInterpreter {
                 };
                 self.register.increment_pc();
             }
+            Instruction::Rlwimix(gpr_s, gpr_a, sh, mb, me, rc) => {
+                let mask = make_rotation_mask(mb as u32, me as u32);
+                let r = self.register.get_gpr(gpr_s).rotate_left(sh.into());
+                self.register.set_gpr(
+                    gpr_a,
+                    (r & mask) | (self.register.get_gpr(gpr_a) & (!mask))
+                );
+                if rc {
+                    self.register.update_cr0(self.register.get_gpr(gpr_a));
+                };
+                self.register.increment_pc();
+            }
             Instruction::Lwz(gpr_d, gpr_a, d) => {
                 let address = self.register.compute_address_based_on_register(gpr_a, d);
                 let new_value = self.read_u32(address);
@@ -560,7 +572,7 @@ impl GekkoInterpreter {
         match l_type {
             0 => {
                 let encoded_value = self.read_u32(address);
-                f32::from_ne_bytes((encoded_value).to_ne_bytes()) as f64;
+                f32::from_ne_bytes((encoded_value).to_ne_bytes()) as f64
             }
             4 => todo!("dequantize type 4"),
             5 => todo!("dequantize type 5"),
